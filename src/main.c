@@ -1,7 +1,11 @@
-#include <stdio.h>
+#include "server.h"
 
-#define port 0 // TODO
+#define DEFAULT_PORT "80"
 
 int main() {
-    printf("Server listening on port %d\n", port);
+    server_t server = create_server(DEFAULT_PORT);
+
+    listen_on(server, NULL);
+
+    return 0;
 }
