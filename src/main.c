@@ -59,24 +59,27 @@ DWORD WINAPI handle_client(void* args) {
   return 0;
 }
 */
-void callback(SOCKET client_socket) {
+CB_RESULT callback(SOCKET client_socket) {
   char buffer[1024];
 
   int ret_val = recv(client_socket, (char*)buffer, sizeof(buffer), 0);
 
+  printf("cb running\n");
 
   if (ret_val < 0) {
     printf("recv error: %d\n", ret_val);
   }
   else if (ret_val == 0) {
-    printf("socket: %d: connection closed\n", client_socket);
-    closesocket(client_socket);
+    printf("socket: %d: connection closed\n", (int)client_socket);
+    return CB_CLOSE_SOCKET;
   }
   else {
-    printf("socket: %d: connection established\n", client_socket);
-    printf("socket: %d: bytes received: %d\n", client_socket, ret_val);
+    printf("socket: %d: connection established\n", (int)client_socket);
+    printf("socket: %d: bytes received: %d\n", (int)client_socket, ret_val);
     send(client_socket, buffer, sizeof(buffer), 0);
   }
+
+  return CB_CONTINUE;
 }
 
 int main() {

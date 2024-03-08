@@ -47,7 +47,7 @@ int main() {
     ConnectSocket = socket(ptr->ai_family, ptr->ai_socktype,
       ptr->ai_protocol);
     if (ConnectSocket == INVALID_SOCKET) {
-      printf("socket failed with error: %ld\n", WSAGetLastError());
+      printf("socket failed with error: %d\n", WSAGetLastError());
       WSACleanup();
       return 1;
     }
@@ -79,7 +79,7 @@ int main() {
     return 1;
   }
 
-  printf("Bytes Sent: %ld\n", iResult);
+  printf("Bytes Sent: %d\n", iResult);
 
   // shutdown the connection since no more data will be sent
   iResult = shutdown(ConnectSocket, SD_SEND);
