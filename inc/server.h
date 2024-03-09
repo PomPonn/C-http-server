@@ -13,15 +13,10 @@ typedef int CB_RESULT;
 // defines callback function for handle_connections
 typedef CB_RESULT(*client_callback)(SOCKET client_socket);
 
-// use to access the callback parameters passed to callback wrapper through PVOID param
-#define _CB_PARAM(callback_args, param_type, mem_offset) (*(param_type*)((BYTE*)callback_args + sizeof(client_callback) + mem_offset))
+BOOL WINAPI _control_handler(DWORD ctrl_type);
 
-// use to access the callback pointer passed to callback wrapper through PVOID param
-#define _CB_CALLBACK(callback_args) (*(client_callback*)callback_args)
+BOOL init_winsock();
 
+SOCKET create_listen_socket(char* host, char* port, int socket_type, int address_family, int protocol);
 
-SOCKET create_tcp_server_socket(char* port);
-
-VOID CALLBACK _callback_wrapper(PTP_CALLBACK_INSTANCE instance, PVOID param, PTP_WORK work);
-
-int handle_connections(SOCKET server_socket, int max_connections, client_callback callback);
+int handle_connections(SOCKET listen_socket, int max_connections, client_callback callback);

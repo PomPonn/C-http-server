@@ -1,8 +1,6 @@
 #include "server.h"
 #include "stdio.h"
 
-#define DEFAULT_PORT "80"
-
 CB_RESULT callback(SOCKET client_socket) {
   char buffer[1024];
 
@@ -25,9 +23,11 @@ CB_RESULT callback(SOCKET client_socket) {
 }
 
 int main() {
-  SOCKET server = create_tcp_server_socket(DEFAULT_PORT);
+  init_winsock();
 
-  handle_connections(server, 100, callback);
+  SOCKET listener = create_listen_socket("localhost", "80", SOCK_STREAM, AF_INET, IPPROTO_TCP);
+
+  handle_connections(listener, 100, callback);
 
   return 0;
 }
