@@ -1,6 +1,6 @@
 #pragma once
 
-#include <winsock2.h> // socket networking
+#include <winsock2.h> // socket programming windows api
 
 #define MemAlloc(flags, size) HeapAlloc(GetProcessHeap(), flags, size)
 #define MemFree(pmemory) HeapFree(GetProcessHeap(), 0, pmemory)
@@ -10,6 +10,7 @@ typedef int CB_RESULT;
 #define CB_CONTINUE 0
 #define CB_CLOSE_SOCKET 1
 
+// defines callback function for handle_connections
 typedef CB_RESULT(*client_callback)(SOCKET client_socket);
 
 // use to access the callback parameters passed to callback wrapper through PVOID param

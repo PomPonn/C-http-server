@@ -1,6 +1,6 @@
 #include "server.h"
 
-#include <ws2tcpip.h> // address resolving
+#include <ws2tcpip.h> // address resolve
 #include <stdio.h> // console output
 
 // inform compiler to use winsock library
@@ -8,30 +8,32 @@
 
 // GLOBAL
 int* connections;
-CRITICAL_SECTION connections_mutex;
-int conns_tracker = 0;
+CRITICAL_SECTION conns_mutex;
 
 int handle_connections(SOCKET server_socket, int max_connections, client_callback callback) {
-  // verify arguments
+  // verify parameters
   if (max_connections < 1 || server_socket == INVALID_SOCKET || callback == NULL)
     return -1;
 
-  // allocate memory for client sockets (+ server socket)
-  connections = MemAlloc(0, sizeof(SOCKET) * (max_connections + 1));
-
   fd_set fd_read_set;
   SOCKET client_socket;
-  int ret_val = 0;
-
-  // init connections and let the first one be server socket
-  connections[0] = server_socket;
-  for (int i = 1; i < max_connections; i++) {
-    connections[i] = -1;
-  }
-
   SYSTEM_INFO system_info;
   TP_CALLBACK_ENVIRON callback_env;
   TP_POOL* tpool;
+  int ret_val = 0;
+
+  // allocate memory for client sockets (+1 server socket)
+  connections = MemAlloc(0, sizeof(SOCKET) * (max_connections + 1));
+
+  // init connections and let the first one be the server socket
+  // -1 value is reserved for sockets being unavailable to use, so fill connections with -2 instead
+  connections[0] = server_socket;
+  for (int i = 1; i <= max_connections; i++) {
+    connections[i] = -2;
+  }
+
+  // init connections criical section
+  InitializeCriticalSectionAndSpinCount(&conns_mutex, 6000);
 
   // get number of CPU cores
   GetSystemInfo(&system_info);
@@ -57,38 +59,35 @@ int handle_connections(SOCKET server_socket, int max_connections, client_callbac
   InitializeThreadpoolEnvironment(&callback_env);
   SetThreadpoolCallbackPool(&callback_env, tpool);
 
-  // init critical section
-  InitializeCriticalSectionAndSpinCount(&connections_mutex, 6000);
-
   // start handling clients
   while (TRUE) {
-
+    // reset fd_read_set before select call
     FD_ZERO(&fd_read_set);
-
-    EnterCriticalSection(&connections_mutex);
-    // fill fd_set before select call
-    for (int i = 0; i < max_connections; i++) {
+    EnterCriticalSection(&conns_mutex);
+    for (int i = 0; i <= max_connections; i++) {
       if (connections[i] >= 0)
         FD_SET(connections[i], &fd_read_set);
     }
-    LeaveCriticalSection(&connections_mutex);
+    LeaveCriticalSection(&conns_mutex);
 
     // wait until select return
-    ret_val = select(FD_SETSIZE, &fd_read_set, NULL, NULL, NULL);
+    ret_val = select(0, &fd_read_set, NULL, NULL, NULL);
+    printf("\nre_val: %d", ret_val);
 
     if (ret_val > 0) {
       // check if socket with event is server_socket
       if (FD_ISSET(server_socket, &fd_read_set)) {
-        // accept new connection
+        printf(" server");
+        // accept new client connection
         client_socket = accept(server_socket, NULL, NULL);
 
         if (client_socket == INVALID_SOCKET) {
-          printf("Accept failed\n");
+          printf("Accept failed: %d\n", WSAGetLastError());
         }
         else {
-          // add the new client socket to the first free connections array slot
+          // add new client socket to the first free connections slot
           for (int i = 1; i < max_connections; i++) {
-            if (connections[i] < 0) {
+            if (connections[i] < -1) {
               connections[i] = client_socket;
               break;
             }
@@ -99,38 +98,52 @@ int handle_connections(SOCKET server_socket, int max_connections, client_callbac
           continue;
       }
 
+      printf(" client\n");
       // iterate connections in search of sockets with event
-      for (int i = 1; i < max_connections; i++) {
+      for (int i = 1; i <= max_connections; i++) {
         if (connections[i] > 0 && FD_ISSET(connections[i], &fd_read_set)) {
           // init callback args
           VOID* callback_args =
             MemAlloc(HEAP_ZERO_MEMORY,
-              sizeof(callback) + sizeof(int)/* conn index */);
+              sizeof(callback) + sizeof(SOCKET)/* client_socket */ + sizeof(int)/* conn index */);
 
           _CB_CALLBACK(callback_args) = callback;
-          _CB_PARAM(callback_args, int, 0) = i;
+          _CB_PARAM(callback_args, SOCKET, 0) = connections[i];
+          _CB_PARAM(callback_args, int, sizeof(SOCKET)) = i;
 
+          // create and submit work
           TP_WORK* work = CreateThreadpoolWork(_callback_wrapper, callback_args, &callback_env);
           SubmitThreadpoolWork(work);
-          conns_tracker++;
-          connections[i] = -1; // temporarly invalidate connection while thread is processing it
+
+          EnterCriticalSection(&conns_mutex);
+          connections[i] = -1; // temporarily invalidate connection while thread is processing it
+          LeaveCriticalSection(&conns_mutex);
+
           // close work async when it wont be used anymore
           CloseThreadpoolWork(work);
+
+          // end loop if all connections have been found
+          if (--ret_val == 0)
+            break;
         }
-        // end loop if all connections have been found
-        if (--ret_val == 0)
-          break;
       }
     }
     else {
-      printf("Accept failed: %d\n", WSAGetLastError());
+      printf("Select failed: %d\n", WSAGetLastError());
     }
   } // while (TRUE)
 
   // cleanup (if there will be a way to get there)
   // wait for threads to finish first
+
+   /* Close all sockets */
+  for (int i = 0; i < max_connections; i++) {
+    if (connections[i] > 0) {
+      closesocket(connections[i]);
+    }
+  }
+  DestroyThreadpoolEnvironment(&callback_env);
   CloseThreadpool(tpool);
-  DeleteCriticalSection(&connections_mutex);
   WSACleanup();
 
   return 0;
@@ -139,32 +152,29 @@ int handle_connections(SOCKET server_socket, int max_connections, client_callbac
 VOID CALLBACK _callback_wrapper(PTP_CALLBACK_INSTANCE instance, PVOID param, PTP_WORK work) {
   // extract data from param and free it
   client_callback callback = _CB_CALLBACK(param);
-  int client_socket_index = _CB_PARAM(param, int, 0);
+  SOCKET client_socket = _CB_PARAM(param, SOCKET, 0);
+  int client_socket_index = _CB_PARAM(param, int, sizeof(SOCKET));
 
   MemFree(param);
-
-  EnterCriticalSection(&connections_mutex);
-
-  SOCKET client_socket = connections[client_socket_index];
-
-  LeaveCriticalSection(&connections_mutex);
 
   // run user defined callback
   CB_RESULT res = callback(client_socket);
 
   // react to callback result
+  EnterCriticalSection(&conns_mutex);
   switch (res) {
   case CB_CONTINUE:
-    connections[client_socket_index] = client_socket; // validate connection back
+    connections[client_socket_index] = client_socket; // open connection back
     break;
   case CB_CLOSE_SOCKET:
-    EnterCriticalSection(&connections_mutex);
-    LeaveCriticalSection(&connections_mutex);
-
+    connections[client_socket_index] = -2; // invalidate connection
     closesocket(client_socket);
     break;
   }
+  LeaveCriticalSection(&conns_mutex);
 }
+
+// to remake
 
 SOCKET create_tcp_server_socket(char* port) {
   WSADATA wsa_data;

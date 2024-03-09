@@ -2,4 +2,5 @@
 HTTP server written in C
 
 # TODO:
-- handle socket closing -> make something with callback function? Maybe It should return something
+- handle socket closing -> refreshing page causes creation of second (unwanted) socket which becomes valid socket afer another refresh - it shouldnt happen
+- only six connections can be created - idk why
