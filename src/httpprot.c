@@ -11,6 +11,7 @@
 
 // defines size of static elements in http response, e.g. HTTP/1.1 is size of 8
 #define _RESP_FIXED_SIZE 14
+
 #define CRLF "\r\n"
 // convert ASCII character to integer
 #define char_to_int(c) (c) - 48
@@ -34,8 +35,6 @@ int is_in_header(const char* const header_value, char delim, char* str) {
       quit = 1;
     }
     len = pend - pstart;
-
-
 
     if (len + 1 > SMALL_BUFLEN) {
       return 0;
@@ -144,7 +143,7 @@ char* build_http_response
   return response;
 }
 
-int resolve_http_request(char* const line_buffer, http_request* result) {
+int resolve_http_request_line(char* const line_buffer, http_request_line* result) {
   char* ptr, * ptr2;
   int len = 0;
   char temp[SMALL_BUFLEN];
@@ -206,4 +205,87 @@ int resolve_http_request(char* const line_buffer, http_request* result) {
     return -4;
 
   return 0;
+}
+
+void extract_file_extension(const char* const filepath, char* const extension) {
+  // find last dot
+  char* pptr = strrchr(filepath, '.'), * eptr = extension;
+  pptr++;
+
+  while (*pptr)
+  {
+    *eptr = *pptr;
+    eptr++;
+    pptr++;
+  }
+  *eptr = '\0';
+}
+
+int get_resource(char* path, int max_path_size, http_version version, char* req_headers_buffer, char* response) {
+  http_header h_accept;
+  h_accept.name = "Accept";
+
+  if (!find_http_header(req_headers_buffer, &h_accept)) {
+    printf("http parsing error\n");
+    return -1;
+  }
+
+  // if root is requested then get index.html
+  if (path[strlen(path) - 1] == '/') {
+    strcat_s(path, max_path_size, "index.html");
+  }
+
+  char extension[8];
+  extract_file_extension(path, extension);
+
+  if (strcmp(extension, "html") == 0) {
+    if (!is_in_header(h_accept.value, ',', "text/html")) {
+      printf("http parsing error\n");
+      return -2;
+    }
+  }
+  else if (strcmp(extension, "json") == 0) {
+
+  }
+
+  http_header_free(&h_accept);
+
+  // open file
+  FILE* fp;
+  fopen_s(&fp, path, "rb");
+
+  if (!fp) {
+    printf("failed to open resource file: %s\n", path);
+    return -3;
+  }
+
+  fseek(fp, 0, SEEK_END);
+  int file_size = ftell(fp);
+  fseek(fp, 0, SEEK_SET);
+
+  char* file_buf = malloc(file_size + 1);
+
+  if (fread(file_buf, sizeof(char), file_size, fp) != file_size) {
+    printf("Error while reading resource file: %s\n", path);
+    return -3;
+  }
+  file_buf[file_size] = '\0';
+
+  char buff[16];
+
+  _itoa_s(file_size, buff, 16, 10);
+
+  http_header resp_headers[] = {
+    { "Content-Length", buff },
+    { "Content-Type", "text/html; charset=utf-8" },
+  };
+  int response_headers_count = sizeof(resp_headers) / sizeof(http_header);
+
+  response = build_http_response(version, "200 OK",
+    resp_headers, response_headers_count, file_buf);
+
+  free(file_buf);
+  fclose(fp);
+
+  return response_headers_count;
 }

@@ -18,11 +18,11 @@ typedef struct http_version {
   short minor;
 } http_version;
 
-typedef struct http_request {
+typedef struct http_request_line {
   req_method method;
   http_version version;
   char path[_PATHSIZE];
-} http_request;
+} http_request_line;
 
 // must be freed with http_header_free()
 typedef struct http_header {
@@ -65,4 +65,18 @@ char* build_http_response
 /// @param line_buffer buffer containing http request to be resolved
 /// @param result resolved http request
 /// @return error code
-int resolve_http_request(char* const line_buffer, http_request* result);
+int resolve_http_request_line(char* const line_buffer, http_request_line* result);
+
+/// @brief extracts file extension from given file path
+/// @param filepath path of the file
+/// @param extension file extension of filepath in string format
+void extract_file_extension(const char* const filepath, char* const extension);
+
+/// @brief prepares http response for GET request
+/// @param path path to the requested resource
+/// @param max_path_size maximum number of characters 'path' can contain
+/// @param version http version
+/// @param req_headers pointer to string containing http request headers
+/// @param response resulting http response
+/// @return error code if less than 0, otherwise response length
+int get_resource(char* path, int max_path_size, http_version version, char* req_headers_buffer, char* const response);
