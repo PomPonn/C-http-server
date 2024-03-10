@@ -11,4 +11,6 @@ target_include_directories(C_HTTP_server PUBLIC inc/)
 
 target_sources(C_HTTP_server PUBLIC
 ${SRC_DIR}/server.c
+${SRC_DIR}/utils.c
+${SRC_DIR}/httpprot.c
 )

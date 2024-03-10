@@ -1,29 +1,32 @@
-#include <stdlib.h>
-
 #include "utils.h"
 
-char* get_buffer_line(char* buffer, char** last_char) {
-  char* line, * ptr = buffer;
-  int line_size = 0;
+#include <stdlib.h>
 
-  // find size line length ( check for \r\n string [CRLF])
-  while (*ptr != '\r' || *(ptr + 1) != '\n') {
-    ptr++;
+char* get_buffer_line(char* strbuf, char* linebuf, unsigned int linebuff_size) {
+  if (!strbuf || !linebuf || linebuff_size == 0) return NULL;
+
+  char* end = strbuf;
+  size_t line_size = 0;
+
+  // find line length ( check for \r\n string [CRLF])
+  while ((*end != '\r' || *(end + 1) != '\n') && *end != '\0') {
+    end++;
     line_size++;
   }
 
-  if (!line_size) return NULL;
+  if (!line_size || line_size >= linebuff_size) return NULL;
 
-  line = malloc(line_size);
-  ptr = buffer;
+  char* sptr = strbuf;
+  char* lptr = linebuf;
 
-  for (int i = 0; i < line_size; i++) {
-    line[i] = *ptr;
-    ptr++;
+  while (sptr != end) {
+    *lptr = *sptr;
+    lptr++;
+    sptr++;
   }
-  line[line_size] = '\0';
+  *lptr = '\0';
 
-  *last_char = ptr + 2;
+  end = end + 2;
 
-  return line;
+  return end;
 }
