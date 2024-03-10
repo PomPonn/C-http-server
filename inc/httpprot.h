@@ -30,16 +30,25 @@ typedef struct http_header {
   char* value;
 } http_header;
 
-
+/// @brief frees the header memory
+/// @param header pointer to the header
 void http_header_free(http_header* header);
 
-// header 'name' field must be filled before
-// header 'value' field is filled by the function
-// returns boolean indicating whether the header is present
-int find_http_header_value(char* const buffer, http_header* const header);
+/// @brief looks for value of given http header name and sets it in header->value
+/// @param buffer buffer containg http headers
+/// @param header pointer to http_header struct;
+///        header->name defines name of the header to search for;
+///        header->value contains found value (if found)
+/// @return 1 if found, 0 if not
+int find_http_header(char* const buffer, http_header* const header);
 
-// returns boolean indicating whether the string is present
-int is_in_header_value(const char* const header_value, char delim, char* str);
+/// @brief checks if given string is a value of given http header content
+/// @param header_value header content (value)
+/// @param delim sign which separates values in header content
+/// @param str value to search for
+/// @return 1 if found, 0 if not
+int is_in_header(const char* const header_value, char delim, char* str);
+
 
 int _total_headers_size(http_header* headers, int h_count);
 

@@ -21,7 +21,7 @@ void http_header_free(http_header* header) {
   header->value = NULL;
 }
 
-int is_in_header_value(const char* const header_value, char delim, char* str) {
+int is_in_header(const char* const header_value, char delim, char* str) {
   char temp[SMALL_BUFLEN];
   int len = 0, quit = 0;
   const char* pstart = header_value, * pend;
@@ -60,7 +60,7 @@ int is_in_header_value(const char* const header_value, char delim, char* str) {
   return 0;
 }
 
-int find_http_header_value(char* const buffer, http_header* const header) {
+int find_http_header(char* const buffer, http_header* const header) {
   char line[LINE_LEN];
   char temp[SMALL_BUFLEN];
   char* lptr = buffer;
