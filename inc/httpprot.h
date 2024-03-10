@@ -59,7 +59,7 @@ int _total_headers_size(http_header* headers, int h_count);
 /// @param body pointer to message body
 /// @returns pointer to
 char* build_http_response
-(http_version version, char* status, http_header* headers, int h_count, char* body);
+(http_version version, char* status, http_header* headers, int h_count, char* body, int* response_size);
 
 /// @brief resolves http request in specified buffer
 /// @param line_buffer buffer containing http request to be resolved

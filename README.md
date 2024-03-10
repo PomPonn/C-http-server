@@ -2,4 +2,4 @@
 server written in C
 
 # BUGS:
-- none
+- rebuild get_resource - only read file?

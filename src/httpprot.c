@@ -105,11 +105,11 @@ int _total_headers_size(http_header* headers, int h_count) {
 }
 
 char* build_http_response
-(http_version version, char* status, http_header* headers, int h_count, char* body) {
-  int response_size =
+(http_version version, char* status, http_header* headers, int h_count, char* body, int* response_size) {
+  int resp_size =
     _RESP_FIXED_SIZE + strlen(status) + _total_headers_size(headers, h_count) + strlen(body);
 
-  char* response = malloc(response_size);
+  char* response = malloc(resp_size);
   // mark as empty
   *response = '\0';
 
@@ -118,28 +118,29 @@ char* build_http_response
   sprintf_s(temp, sizeof(temp), "HTTP/%d.%d ", version.major, version.minor);
 
   // concat version string to response
-  strcat_s(response, response_size, temp);
+  strcat_s(response, resp_size, temp);
   // concat status string to respone
-  strcat_s(response, response_size, status);
+  strcat_s(response, resp_size, status);
   // end line
-  strcat_s(response, response_size, CRLF);
+  strcat_s(response, resp_size, CRLF);
 
   // concat all headers to response
   for (int i = 0; i < h_count; i++) {
     // add header content
-    strcat_s(response, response_size, headers[i].name);
-    strcat_s(response, response_size, ": ");
-    strcat_s(response, response_size, headers[i].value);
+    strcat_s(response, resp_size, headers[i].name);
+    strcat_s(response, resp_size, ": ");
+    strcat_s(response, resp_size, headers[i].value);
     // end line
-    strcat_s(response, response_size, CRLF);
+    strcat_s(response, resp_size, CRLF);
   }
 
   // add empty line to indicate start of message body
-  strcat_s(response, response_size, CRLF);
+  strcat_s(response, resp_size, CRLF);
 
   // add msg body
-  strcat_s(response, response_size, body);
+  strcat_s(response, resp_size, body);
 
+  *response_size = resp_size;
   return response;
 }
 
@@ -280,12 +281,13 @@ int get_resource(char* path, int max_path_size, http_version version, char* req_
     { "Content-Type", "text/html; charset=utf-8" },
   };
   int response_headers_count = sizeof(resp_headers) / sizeof(http_header);
+  int response_size = 0;
 
   response = build_http_response(version, "200 OK",
-    resp_headers, response_headers_count, file_buf);
+    resp_headers, response_headers_count, file_buf, &response_size);
 
   free(file_buf);
   fclose(fp);
 
-  return response_headers_count;
+  return response_size;
 }
