@@ -247,15 +247,14 @@ int get_resource(const char* const path, char** const content) {
   int file_size = ftell(fp);
   fseek(fp, 0, SEEK_SET);
 
-  *content = malloc(file_size + 1);
+  *content = malloc(file_size);
 
   if (fread(*content, sizeof(char), file_size, fp) != file_size) {
     return -2;
   }
-  (*content)[file_size] = '\0';
 
   fclose(fp);
-  return file_size + 1;
+  return file_size;
 }
 
 void free_resource(char* content) {
