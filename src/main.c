@@ -25,6 +25,8 @@ CB_RESULT callback(SOCKET client_socket) {
     return CB_CLOSE_SOCKET;
   }
   else {
+    printf("connected: %d\n", ret_val);
+
     char* ptr = buffer;
     char line[LINE_LEN];
     http_request_line req;
