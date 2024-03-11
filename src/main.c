@@ -62,10 +62,11 @@ CB_RESULT callback(SOCKET client_socket) {
         return CB_CONTINUE;
       }
 
-      /* don't check whether the request accepts requested file (because it makes no sense) - but keep it as reference as a comment
       // get file extension
       char extension[8];
       get_file_extension(full_path, extension);
+
+      /* don't check whether the request accepts requested file (because it makes no sense) - but keep it as reference as a comment
 
       // switch on the file extension
       if (strcmp(extension, "html") == 0) {
@@ -99,10 +100,15 @@ CB_RESULT callback(SOCKET client_socket) {
       char length_str[16];
       _itoa_s(file_size, length_str, 16, 10);
 
+      // make content-type value
+      char content_type[32] = "text/"; // to change
+      strcat_s(content_type, 32, extension);
+      strcat_s(content_type, 32, "; charset=utf-8");
+
       // make response headers
       http_header resp_headers[] = {
         { "Content-Length", length_str },
-        { "Content-Type", "text/html; charset=utf-8" },
+        { "Content-Type", content_type },
       };
 
       int response_headers_count = sizeof(resp_headers) / sizeof(http_header);
