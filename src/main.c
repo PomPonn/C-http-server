@@ -40,14 +40,14 @@ CB_RESULT callback(SOCKET client_socket) {
       return CB_CONTINUE;
     }
 
+    // if root is requested then get index.html
+    if (strcmp(req.path, "/") == 0) {
+      strcat_s(req.path, _PATHSIZE, "index.html");
+    }
+
     // concat paths
     char full_path[MAX_PATH_SIZE] = INDEX_PATH;
     strcat_s(full_path, MAX_PATH_SIZE, req.path);
-
-    // if root is requested then get index.html
-    if (strcmp(req.path, "/") == 0) {
-      strcat_s(full_path, MAX_PATH_SIZE, "index.html");
-    }
 
     // handle request
     switch (req.method) {

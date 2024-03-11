@@ -17,6 +17,7 @@ char* get_buffer_line(char* strbuf, char* linebuf, unsigned int linebuff_size) {
   if (!line_size || line_size >= linebuff_size) return NULL;
 
   strncpy_s(linebuf, linebuff_size, strbuf, line_size);
+  linebuf[line_size] = '\0';
 
   end = end + 2;
 
