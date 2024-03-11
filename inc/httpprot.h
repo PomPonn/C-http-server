@@ -22,6 +22,7 @@ typedef struct http_version {
 typedef struct http_request_line {
   req_method method;
   http_version version;
+  // URL path
   char path[_PATHSIZE];
 } http_request_line;
 

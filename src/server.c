@@ -80,7 +80,6 @@ int handle_connections(SOCKET listen_socket, int max_connections, client_callbac
           case CB_CONTINUE:
             break;
           case CB_CLOSE_SOCKET:
-            closesocket(connections[i]);
             connections[i] = -1; // invalidate connection
             break;
           }

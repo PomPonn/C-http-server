@@ -14,7 +14,6 @@
 
 CB_RESULT callback(SOCKET client_socket) {
   char buffer[1024];
-
   int ret_val = recv(client_socket, (char*)buffer, sizeof(buffer), 0);
 
   if (ret_val < 0) {
@@ -22,10 +21,11 @@ CB_RESULT callback(SOCKET client_socket) {
   }
   else if (ret_val == 0) {
     printf("disconnected: %d\n", client_socket);
+    closesocket(client_socket);
     return CB_CLOSE_SOCKET;
   }
   else {
-    printf("connected: %d\n", ret_val);
+    printf("connected: %d\n", client_socket);
 
     char* ptr = buffer;
     char line[LINE_LEN];
@@ -62,6 +62,7 @@ CB_RESULT callback(SOCKET client_socket) {
         return CB_CONTINUE;
       }
 
+      /* don't check whether the request accepts requested file (because it makes no sense) - but keep it as reference as a comment
       // get file extension
       char extension[8];
       get_file_extension(full_path, extension);
@@ -79,6 +80,7 @@ CB_RESULT callback(SOCKET client_socket) {
         http_header_free(&h_accept);
         return CB_CONTINUE;
       }
+      */
 
       // free accept header, since it wont be needed anymore
       http_header_free(&h_accept);
@@ -89,6 +91,7 @@ CB_RESULT callback(SOCKET client_socket) {
 
       if (file_size < 0) {
         printf("Error while reading requested http resource: %s\n", full_path);
+        send(client_socket, "HTTP/1.1 404\r\nContent-Length: 0\r\n", 34, 0);
         return CB_CONTINUE;
       }
 
@@ -110,6 +113,8 @@ CB_RESULT callback(SOCKET client_socket) {
 
       free_resource(file_buffer);
       if (response_size < 0) {
+        printf("Failed to build http response: %d\n", response_size);
+        send(client_socket, "HTTP/1.1 404 Bad Request\r\nContent-Length: 0\r\n", 46, 0);
         return CB_CONTINUE;
       }
 
