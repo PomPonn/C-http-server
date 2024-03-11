@@ -234,7 +234,7 @@ void get_file_extension(const char* const filepath, char* const extension) {
   *eptr = '\0';
 }
 
-int get_resource(const char* const path, char* const content) {
+int get_resource(const char* const path, char** const content) {
   // open file
   FILE* fp;
   fopen_s(&fp, path, "rb");
@@ -247,12 +247,12 @@ int get_resource(const char* const path, char* const content) {
   int file_size = ftell(fp);
   fseek(fp, 0, SEEK_SET);
 
-  char* file_buf = malloc(file_size + 1);
+  *content = malloc(file_size + 1);
 
-  if (fread(file_buf, sizeof(char), file_size, fp) != file_size) {
+  if (fread(*content, sizeof(char), file_size, fp) != file_size) {
     return -2;
   }
-  file_buf[file_size] = '\0';
+  (*content)[file_size] = '\0';
 
   fclose(fp);
   return file_size + 1;

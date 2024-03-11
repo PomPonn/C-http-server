@@ -40,14 +40,14 @@ CB_RESULT callback(SOCKET client_socket) {
       return CB_CONTINUE;
     }
 
-    // if root is requested then get index.html
-    if (req.path == "/") {
-      strcat_s(req.path, MAX_PATH_SIZE, "index.html");
-    }
-
     // concat paths
     char full_path[MAX_PATH_SIZE] = INDEX_PATH;
     strcat_s(full_path, MAX_PATH_SIZE, req.path);
+
+    // if root is requested then get index.html
+    if (strcmp(req.path, "/") == 0) {
+      strcat_s(full_path, MAX_PATH_SIZE, "index.html");
+    }
 
     // handle request
     switch (req.method) {
@@ -68,11 +68,13 @@ CB_RESULT callback(SOCKET client_socket) {
       if (strcmp(extension, "html") == 0) {
         if (!is_in_http_header(&h_accept, ',', "text/html")) {
           printf("http parsing error\n");
+          http_header_free(&h_accept);
           return CB_CONTINUE;
         }
       }
       else {
         printf("http parsing error: unsupported file extension\n");
+        http_header_free(&h_accept);
         return CB_CONTINUE;
       }
 
@@ -81,15 +83,20 @@ CB_RESULT callback(SOCKET client_socket) {
 
       char* file_buffer = NULL;
       // get requested resource
-      int file_size = get_resource(full_path, file_buffer);
+      int file_size = get_resource(full_path, &file_buffer);
+
+      if (file_size < 0) {
+        printf("Error while reading requested http resource: %s\n", full_path);
+        return CB_CONTINUE;
+      }
 
       // convert file size to string
-      char buff[16];
-      _itoa_s(file_size, buff, 16, 10);
+      char length_str[16];
+      _itoa_s(file_size, length_str, 16, 10);
 
       // make response headers
       http_header resp_headers[] = {
-        { "Content-Length", buff },
+        { "Content-Length", length_str },
         { "Content-Type", "text/html; charset=utf-8" },
       };
 
@@ -111,6 +118,7 @@ CB_RESULT callback(SOCKET client_socket) {
     }
     default: {
       send(client_socket, "HTTP/1.1 404\r\nContent-Length: 0\r\n", 34, 0);
+      break;
     }
     }
   }

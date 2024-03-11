@@ -10,7 +10,7 @@
 #define HTTP_OPTIONS 7
 #define HTTP_PATCH 8
 
-#define _PATHSIZE 64
+#define _PATHSIZE 96
 
 typedef int req_method;
 
@@ -88,7 +88,7 @@ void get_file_extension(const char* const filepath, char* const extension);
 /// @param path path to the resource
 /// @param content resulting resource content
 /// @return error code if less than 0, otherwise content length
-int get_resource(const char* const path, char* const content);
+int get_resource(const char* const path, char** const content);
 
 /// @brief frees allocated resource
 /// @param content resource content to free
