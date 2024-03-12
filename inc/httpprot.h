@@ -10,21 +10,24 @@
 #define HTTP_OPTIONS 7
 #define HTTP_PATCH 8
 
-#define _PATHSIZE 96
+// user might redefine these macros
+#define _PATHSIZE_ 256
+#define _HEADERLINESIZE_ 512
 
 typedef int req_method;
+typedef char* http_response;
 
 typedef struct http_version {
   short major;
   short minor;
 } http_version;
 
-typedef struct http_request_line {
+typedef struct http_request {
   req_method method;
   http_version version;
-  // URL path
-  char path[_PATHSIZE];
-} http_request_line;
+  char url_path[_PATHSIZE_];
+  char* content;
+} http_request;
 
 typedef struct http_header {
   char* name;
@@ -75,22 +78,12 @@ char* build_http_response(
 void free_http_response(char* response);
 
 /// @brief resolves http request line in specified buffer
-/// @param line_buffer buffer containing req line
+/// @param line_buffer buffer containing request
 /// @param result resolved http request line
 /// @return error code -> 0 if successful
-int resolve_http_request_line(char* const line_buffer, http_request_line* result);
+int resolve_http_request_line(char* const buffer, http_request* result);
 
-/// @brief extracts file extension from given file path
-/// @param filepath path of the file
+/// @brief extracts file extension from given file url_path
+/// @param filepath url_path of the file
 /// @param extension file extension of filepath in string format
 void get_file_extension(const char* const filepath, char* const extension);
-
-/// @brief reads resource content
-/// @param path path to the resource
-/// @param content resulting resource content
-/// @return error code if less than 0, otherwise content length
-int get_resource(const char* const path, char** const content);
-
-/// @brief frees allocated resource
-/// @param content resource content to free
-void free_resource(char* content);

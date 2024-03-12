@@ -1,8 +1,18 @@
 #pragma once
 
 /// @brief extracts line from the string buffer
-/// @param strbuf
-/// @param linebuff contains extracted line
-/// @param linebuff_sizen defines linebuff maximum size
+/// @param strbuf the string buffer to extract line from
+/// @param linebuff contains extracted line (optional)
+/// @param linebuff_size defines linebuff maximum size (if linebuf=NULL, set this to 0)
 /// @return pointer to next line or NULL if there was an error
 char* get_buffer_line(char* strbuf, char* linebuf, unsigned int linebuff_size);
+
+/// @brief read file in specified path in binary mode
+/// @param path path to the resource
+/// @param content returns file content
+/// @return error code
+int get_resource(const char* const path, char** const content);
+
+/// @brief frees allocated resource
+/// @param content pointer to the resource
+void free_resource(char* content);

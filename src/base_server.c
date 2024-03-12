@@ -1,7 +1,8 @@
-#include "server.h"
+#include "base_server.h"
 
+#include <WinSock2.h> // socket library
 #include <ws2tcpip.h> // address resolve
-#include <stdio.h> // console output
+#include <stdio.h>    // console output
 
 // inform compiler to use winsock library
 #pragma comment(lib, "Ws2_32.lib")
@@ -12,7 +13,9 @@ int* connections;
 int g_max_conns;
 BOOL g_quit = FALSE;
 
-int handle_connections(SOCKET listen_socket, int max_connections, client_callback callback) {
+BOOL WINAPI _control_handler(DWORD ctrl_type);
+
+int handle_connections(SOCKET listen_socket, int max_connections, connection_callback callback) {
   // verify parameters
   if (max_connections < 1 || listen_socket == INVALID_SOCKET || callback == NULL)
     return -1;
@@ -108,9 +111,9 @@ BOOL WINAPI _control_handler(DWORD ctrl_type) {
   {
     g_quit = TRUE;
     for (int i = 0; i < g_max_conns; i++) {
-    if (connections[i] > 0) {
-      closesocket(connections[i]);
-    }
+      if (connections[i] > 0) {
+        closesocket(connections[i]);
+      }
     }
     MemFree(connections);
 
@@ -136,7 +139,12 @@ BOOL init_winsock() {
   return 1;
 }
 
-SOCKET create_listen_socket(char* host, char* port, int socket_type, int address_family, int protocol) {
+SOCKET create_listen_socket
+(
+  const char* const host,
+  const char* const port,
+  int socket_type, int address_family, int protocol
+) {
   struct addrinfo* result, * ptr, hints;
 
   // init hints structure

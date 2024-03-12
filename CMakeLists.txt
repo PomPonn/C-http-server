@@ -10,7 +10,9 @@ set(SRC_DIR ${CMAKE_HOME_DIRECTORY}/src)
 target_include_directories(C_HTTP_server PUBLIC inc/)
 
 target_sources(C_HTTP_server PUBLIC
-${SRC_DIR}/server.c
+${SRC_DIR}/base_server.c
+${SRC_DIR}/http_server.c
 ${SRC_DIR}/utils.c
 ${SRC_DIR}/httpprot.c
+${SRC_DIR}/url.c
 )

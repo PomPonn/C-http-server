@@ -7,7 +7,6 @@
 #include <stdio.h>
 
 #define SMALL_BUFLEN 64
-#define LINE_LEN 256
 
 // defines size of static elements in http response, e.g. HTTP/1.1 is size of 8
 #define _RESP_FIXED_SIZE 14
@@ -65,13 +64,13 @@ int is_in_http_header(const http_header* const header, char delim, char* str) {
 }
 
 int get_http_header_value(char* const buffer, http_header* const header) {
-  char line[LINE_LEN];
+  char line[_HEADERLINESIZE_];
   char temp[SMALL_BUFLEN];
   char* lptr = buffer;
   char* ptr;
   int len = 0;
 
-  while (lptr = get_buffer_line(lptr, line, LINE_LEN)) {
+  while (lptr = get_buffer_line(lptr, line, _HEADERLINESIZE_)) {
     ptr = strchr(line, ':'); // find end of header name
     len = ptr - line;
     if (len + 1 > SMALL_BUFLEN) {
@@ -156,19 +155,19 @@ char* build_http_response
   return response;
 }
 
-int resolve_http_request_line(char* const line_buffer, http_request_line* result) {
+int resolve_http_request_line(char* const buffer, http_request* result) {
   char* ptr, * ptr2;
   int len = 0;
   char temp[SMALL_BUFLEN];
 
   // find next space
-  ptr = strchr(line_buffer, ' ');
-  len = ptr - line_buffer;
+  ptr = strchr(buffer, ' ');
+  len = ptr - buffer;
   if (len + 1 > SMALL_BUFLEN)
     return -1;
 
   // copy string to next space to the buffer
-  strncpy_s(temp, SMALL_BUFLEN, line_buffer, len);
+  strncpy_s(temp, SMALL_BUFLEN, buffer, len);
 
   // set request method
   if (strcmp(temp, "GET") == 0) {
@@ -202,11 +201,11 @@ int resolve_http_request_line(char* const line_buffer, http_request_line* result
   // find next space
   ptr2 = strchr(++ptr, ' ');
   len = ptr2 - ptr;
-  if (len + 1 > _PATHSIZE)
+  if (len + 1 > _HEADERLINESIZE_)
     return -3;
 
   // copy string to next space to the resource buffer
-  strncpy_s(result->path, SMALL_BUFLEN, ptr, len);
+  strncpy_s(result->url_path, SMALL_BUFLEN, ptr, len);
 
   // find dot
   ptr = strchr(++ptr2, '.');
@@ -216,6 +215,11 @@ int resolve_http_request_line(char* const line_buffer, http_request_line* result
   result->version.minor = char_to_int(*(ptr + 1));
   if (result->version.major < 0 || result->version.minor < 0)
     return -4;
+
+  // set pointer to http request content
+  if (!(result->content = get_buffer_line(ptr, NULL, 0))) {
+    return -5;
+  }
 
   return 0;
 }
@@ -232,32 +236,4 @@ void get_file_extension(const char* const filepath, char* const extension) {
     pptr++;
   }
   *eptr = '\0';
-}
-
-int get_resource(const char* const path, char** const content) {
-  // open file
-  FILE* fp;
-  fopen_s(&fp, path, "rb");
-
-  if (!fp) {
-    return -1;
-  }
-
-  fseek(fp, 0, SEEK_END);
-  int file_size = ftell(fp);
-  fseek(fp, 0, SEEK_SET);
-
-  *content = malloc(file_size);
-
-  if (fread(*content, sizeof(char), file_size, fp) != file_size) {
-    return -2;
-  }
-
-  fclose(fp);
-  return file_size;
-}
-
-void free_resource(char* content) {
-  free(content);
-  content = NULL;
 }

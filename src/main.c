@@ -1,87 +1,40 @@
-#include "httpprot.h"
-
-#include "server.h"
-#include "utils.h"
+#include "http_server.h"
+#include "url.h"
 
 #include <stdio.h>
 #include <string.h>
 
-// cannot end with a slash
-#define INDEX_PATH "C:/Users/gangs/OneDrive/Dokumenty/MyStuff/Projects/C_HTTP_server"
+#define MAX_PATH_SIZE 256
 
-#define MAX_PATH_SIZE 128
-#define LINE_LEN 128
+#define INDEX_PATH "C:/Users/gangs/OneDrive/Dokumenty/MyStuff/Projects/C_HTTP_server/"
 
-CB_RESULT callback(SOCKET client_socket) {
-  char buffer[1024];
-  int ret_val = recv(client_socket, (char*)buffer, sizeof(buffer), 0);
+void on_connection(http_request req, http_response res) {
+  // concat paths
+  char full_path[MAX_PATH_SIZE] = INDEX_PATH;
+  url_append(full_path, MAX_PATH_SIZE, req.url_path);
 
-  if (ret_val < 0) {
-    printf("recv error: %d\n", ret_val);
+  // if root is requested then get index.html
+  if (strcmp(req.url_path, "/") == 0) {
+    url_append(full_path, MAX_PATH_SIZE, "index.html");
   }
-  else if (ret_val == 0) {
-    printf("disconnected: %d\n", client_socket);
-    closesocket(client_socket);
-    return CB_CLOSE_SOCKET;
-  }
-  else {
-    printf("connected: %d\n", client_socket);
 
-    char* ptr = buffer;
-    char line[LINE_LEN];
-    http_request_line req;
+  // get file extension
+  char extension[8];
+  get_file_extension(full_path, extension);
 
-    // read buffer line;
-    if (!(ptr = get_buffer_line(buffer, line, LINE_LEN))) {
-      printf("http parsing error\n");
-      return CB_CONTINUE;
-    }
+  url_parts url;
+  url_parse("https://poczta.wp.pl/login/login.html#/mails/?label=1", &url);
+  /*
+  // handle request
+  switch (req.method) {
+  case HTTP_GET: {
+    http_header h_accept;
+    h_accept.name = "Accept";
 
-    if (resolve_http_request_line(line, &req)) {
-      printf("http parsing error\n");
-      return CB_CONTINUE;
-    }
-
-    // if root is requested then get index.html
-    if (strcmp(req.path, "/") == 0) {
-      strcat_s(req.path, _PATHSIZE, "index.html");
-    }
-
-    // concat paths
-    char full_path[MAX_PATH_SIZE] = INDEX_PATH;
-    strcat_s(full_path, MAX_PATH_SIZE, req.path);
-
-    // handle request
-    switch (req.method) {
-    case HTTP_GET: {
-      http_header h_accept;
-      h_accept.name = "Accept";
-
-      if (!get_http_header_value(ptr, &h_accept)) {
-        printf("http parsing error\n");
-        return CB_CONTINUE;
-      }
-
-      // get file extension
-      char extension[8];
-      get_file_extension(full_path, extension);
-
-      /* don't check whether the request accepts requested file (because it makes no sense) - but keep it as reference as a comment
-
-      // switch on the file extension
-      if (strcmp(extension, "html") == 0) {
-        if (!is_in_http_header(&h_accept, ',', "text/html")) {
+        if (!get_http_header_value(ptr, &h_accept)) {
           printf("http parsing error\n");
-          http_header_free(&h_accept);
           return CB_CONTINUE;
         }
-      }
-      else {
-        printf("http parsing error: unsupported file extension\n");
-        http_header_free(&h_accept);
-        return CB_CONTINUE;
-      }
-      */
 
       // free accept header, since it wont be needed anymore
       http_header_free(&h_accept);
@@ -93,7 +46,7 @@ CB_RESULT callback(SOCKET client_socket) {
       if (file_size < 0) {
         printf("Error while reading requested http resource: %s\n", full_path);
         send(client_socket, "HTTP/1.1 404\r\nContent-Length: 0\r\n", 34, 0);
-        return CB_CONTINUE;
+        return;
       }
 
       // convert file size to string
@@ -121,7 +74,7 @@ CB_RESULT callback(SOCKET client_socket) {
       if (response_size < 0) {
         printf("Failed to build http response: %d\n", response_size);
         send(client_socket, "HTTP/1.1 404 Bad Request\r\nContent-Length: 0\r\n", 46, 0);
-        return CB_CONTINUE;
+        return;
       }
 
       send(client_socket, response, response_size, 0);
@@ -132,18 +85,14 @@ CB_RESULT callback(SOCKET client_socket) {
     default: {
       send(client_socket, "HTTP/1.1 404\r\nContent-Length: 0\r\n", 34, 0);
       break;
-    }
-    }
-  }
-  return CB_CONTINUE;
+    }*/
 }
 
 int main() {
-  init_winsock();
 
-  SOCKET listener = create_listen_socket("localhost", "80", SOCK_STREAM, AF_INET, IPPROTO_TCP);
+  SOCKET server = create_http_server("localhost", "80");
 
-  handle_connections(listener, 100, callback);
+  http_server_listen(server, 128, on_connection);
 
   return 0;
 }
