@@ -28,9 +28,13 @@ void url_parse(char* const url, url_parts* const parsed_url) {
   char* ptr = url, * ptr2 = url;
   int count = 0;
 
-  while (*(ptr - 1) != ':') {
+  while (*ptr != ':' || !(*ptr)) {
     count++;
     ptr++;
+  }
+
+  if (!(*ptr)) {
+
   }
 
   strncpy_s(parsed_url->protocol, _URL_PROT_SIZE, url, count);

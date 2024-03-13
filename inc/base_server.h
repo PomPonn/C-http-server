@@ -11,7 +11,7 @@ typedef int CB_RESULT;
 #define CB_CLOSE_SOCKET 1
 
 // defines callback function for handle_connections
-typedef CB_RESULT(*connection_callback)(SOCKET client_socket);
+typedef CB_RESULT(*IO_CALLBACK)(SOCKET client_socket);
 
 int init_winsock();
 
@@ -25,6 +25,6 @@ SOCKET create_listen_socket
 /// @brief starts infinite loop to handle client connections
 /// @param listen_socket socket to listen on
 /// @param max_connections maximum number of simultaneous connections
-/// @param on_connection callback which runs on client connection
-/// @return error code
-int handle_connections(SOCKET listen_socket, int max_connections, connection_callback on_connection);
+/// @param on_IO_req callback which runs on client request for I/O operation
+/// @return non zero on failure
+int handle_connections(SOCKET listen_socket, int max_connections, IO_CALLBACK on_IO_req);

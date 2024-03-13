@@ -15,4 +15,5 @@ ${SRC_DIR}/http_server.c
 ${SRC_DIR}/utils.c
 ${SRC_DIR}/httpprot.c
 ${SRC_DIR}/url.c
+${SRC_DIR}/error.c
 )

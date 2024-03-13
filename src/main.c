@@ -22,8 +22,6 @@ void on_connection(http_request req, http_response res) {
   char extension[8];
   get_file_extension(full_path, extension);
 
-  url_parts url;
-  url_parse("https://poczta.wp.pl/login/login.html#/mails/?label=1", &url);
   /*
   // handle request
   switch (req.method) {

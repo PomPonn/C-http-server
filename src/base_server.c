@@ -1,5 +1,7 @@
 #include "base_server.h"
 
+#include "error.h"
+
 #include <WinSock2.h> // socket library
 #include <ws2tcpip.h> // address resolve
 #include <stdio.h>    // console output
@@ -7,7 +9,7 @@
 // inform compiler to use winsock library
 #pragma comment(lib, "Ws2_32.lib")
 
-// GLOBAL
+/* GLOBAL */
 int* connections;
 // for _control_handler to access maximum number of connections
 int g_max_conns;
@@ -15,12 +17,17 @@ BOOL g_quit = FALSE;
 
 BOOL WINAPI _control_handler(DWORD ctrl_type);
 
-int handle_connections(SOCKET listen_socket, int max_connections, connection_callback callback) {
+int handle_connections
+(SOCKET listen_socket, int max_connections, IO_CALLBACK callback) {
   // verify parameters
-  if (max_connections < 1 || listen_socket == INVALID_SOCKET || callback == NULL)
+  if (max_connections < 1 || listen_socket == INVALID_SOCKET || callback == NULL) {
+    error_set_last(1, "handle_connections");
+    WSACleanup();
     return -1;
+  }
 
   fd_set fd_read_set;
+  char temp[8];
   int ret_val = 0;
   g_max_conns = max_connections;
 
@@ -55,7 +62,7 @@ int handle_connections(SOCKET listen_socket, int max_connections, connection_cal
         SOCKET client_socket = accept(listen_socket, NULL, NULL);
 
         if (client_socket == INVALID_SOCKET && !g_quit) {
-          printf("Accept failed: %d\n", WSAGetLastError());
+          error_set_last(2, itoa(WSAGetLastError(), temp, 10));
         }
         else {
           // add new client socket to the first free connections slot
@@ -95,7 +102,7 @@ int handle_connections(SOCKET listen_socket, int max_connections, connection_cal
     }
     else {
       if (!g_quit)
-        printf("Select failed: %d\n", WSAGetLastError());
+        error_set_last(3, itoa(WSAGetLastError(), temp, 10));
     }
   } // while (TRUE)
 
@@ -132,7 +139,7 @@ BOOL init_winsock() {
 
   // initialize winsock dll
   if (WSAStartup(MAKEWORD(2, 2), &wsa_data) != NO_ERROR) {
-    printf("WSAStartup failed\n");
+    error_set_last(4, "init_winsock");
     return 0;
   }
 
@@ -146,6 +153,7 @@ SOCKET create_listen_socket
   int socket_type, int address_family, int protocol
 ) {
   struct addrinfo* result, * ptr, hints;
+  char temp[8];
 
   // init hints structure
   ZeroMemory(&hints, sizeof(hints));
@@ -157,7 +165,7 @@ SOCKET create_listen_socket
   // get address info
   int err_code = getaddrinfo(host, port, &hints, &result);
   if (err_code) {
-    printf("getaddrinfo failed with error code %d\n", err_code);
+    error_set_last(5, itoa(err_code, temp, 10));
     WSACleanup();
     return INVALID_SOCKET;
   }
@@ -178,11 +186,10 @@ SOCKET create_listen_socket
       listen_socket = INVALID_SOCKET;
       ptr = ptr->ai_next;
     }
-
   }
 
   if (listen_socket == INVALID_SOCKET) {
-    printf("Error at socket creation: %d\n", WSAGetLastError());
+    error_set_last(6, itoa(WSAGetLastError(), temp, 10));
     freeaddrinfo(result);
     WSACleanup();
     return INVALID_SOCKET;
@@ -192,7 +199,7 @@ SOCKET create_listen_socket
 
   // listen for connections
   if (listen(listen_socket, SOMAXCONN) == SOCKET_ERROR) {
-    printf("Listen failed with error: %d\n", WSAGetLastError());
+    error_set_last(7, itoa(WSAGetLastError(), temp, 10));
     closesocket(listen_socket);
     WSACleanup();
     return INVALID_SOCKET;
