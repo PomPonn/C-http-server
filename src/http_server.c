@@ -50,6 +50,22 @@ CB_RESULT IO_callback(SOCKET client_socket) {
   return CB_CONTINUE;
 }
 
+void http_bind_listener(HTTP_EVENT event, void* callback)
+{
+  switch (event) {
+  case HTTP_EVENT_REQUEST:
+    _g_onreq = (HTTP_REQUEST_CALLBACK)callback;
+    break;
+  case HTTP_EVENT_CONNECTION_OPEN:
+    _g_onconnopen = (HTTP_CONNECTION_OPEN_CALLBACK)callback;
+    break;
+  case HTTP_EVENT_CONNECTION_CLOSE:
+    _g_onconnclose = (HTTP_CONNECTION_CLOSE_CALLBACK)callback;
+    break;
+  default: break;
+  }
+}
+
 SOCKET create_http_server(const char* const host, const char* const port) {
   if (!init_winsock()) {
     return INVALID_SOCKET;
