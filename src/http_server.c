@@ -4,25 +4,28 @@
 #include "error.h"
 
 #include <WinSock2.h> // socket library
-#include <stdio.h>
 
+// edit as needed
 #define CONNECTION_RECIEVE_BUFFER_SIZE 10240
 
 // events callback (user defined)
 HTTP_REQUEST_CALLBACK _g_onreq = NULL;
+HTTP_CONNECTION_CLOSE_CALLBACK _g_onconnclose = NULL;
+HTTP_CONNECTION_OPEN_CALLBACK _g_onconnopen = NULL;
 
-// update here
+
 CB_RESULT IO_callback(SOCKET client_socket) {
   char buffer[CONNECTION_RECIEVE_BUFFER_SIZE];
-  char temp[8];
+  char temp[TEMP_SIZE];
 
   int ret_val = recv(client_socket, (char*)buffer, CONNECTION_RECIEVE_BUFFER_SIZE, 0);
 
   if (ret_val < 0) {
-    error_set_last(8, itoa(ret_val, temp, 10));
+    error_set_last_with_code(8, ret_val);
   }
   else if (ret_val == 0) {
-    // event here?
+    if (_g_onconnclose)
+      _g_onconnclose(client_socket);
     closesocket(client_socket);
     return CB_CLOSE_SOCKET;
   }
@@ -37,11 +40,11 @@ CB_RESULT IO_callback(SOCKET client_socket) {
     }
 
     // call callback
-    // update this
-    _g_onconn(req, res);
+    if (_g_onreq)
+      _g_onreq(req, res);
 
     if (send(client_socket, res, strlen(res), 0) == SOCKET_ERROR) {
-      error_set_last(10, itoa(WSAGetLastError(), temp, 10));
+      error_set_last_with_code(8, WSAGetLastError());
     }
   }
   return CB_CONTINUE;
@@ -49,14 +52,12 @@ CB_RESULT IO_callback(SOCKET client_socket) {
 
 SOCKET create_http_server(const char* const host, const char* const port) {
   if (!init_winsock()) {
-    error_last_print_message();
     return INVALID_SOCKET;
   }
 
   SOCKET server_socket = create_listen_socket(host, port, SOCK_STREAM, AF_INET, IPPROTO_TCP);
 
   if (!server_socket) {
-    error_last_print_message();
     return INVALID_SOCKET;
   }
 
@@ -65,8 +66,9 @@ SOCKET create_http_server(const char* const host, const char* const port) {
 
 int http_server_listen
 (SOCKET server_socket, int max_connections) {
+  on_socket_accept(_g_onconnopen);
+
   if (handle_connections(server_socket, max_connections, IO_callback)) {
-    error_last_print_message();
     return -1;
   }
 

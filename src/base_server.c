@@ -4,7 +4,6 @@
 
 #include <WinSock2.h> // socket library
 #include <ws2tcpip.h> // address resolve
-#include <stdio.h>    // console output
 
 // inform compiler to use winsock library
 #pragma comment(lib, "Ws2_32.lib")
@@ -15,16 +14,25 @@ int* connections;
 int g_max_conns;
 BOOL g_quit = FALSE;
 
+IO_CALLBACK g_io_cb = NULL;
+SOCK_ACCEPT_CALLBACK g_sock_acc_cb = NULL;
+
 BOOL WINAPI _control_handler(DWORD ctrl_type);
 
 int handle_connections
-(SOCKET listen_socket, int max_connections, IO_CALLBACK callback) {
+(SOCKET listen_socket, int max_connections, IO_CALLBACK on_IO_req) {
   // verify parameters
-  if (max_connections < 1 || listen_socket == INVALID_SOCKET || callback == NULL) {
+  if (max_connections < 1 || listen_socket == INVALID_SOCKET) {
     error_set_last(1, "handle_connections");
     WSACleanup();
     return -1;
   }
+
+  // set control handler to make cleanup after server shutdown
+  SetConsoleCtrlHandler(_control_handler, TRUE);
+
+  if (on_IO_req)
+    on_IO_request(on_IO_req);
 
   fd_set fd_read_set;
   char temp[8];
@@ -39,9 +47,6 @@ int handle_connections
   for (int i = 1; i <= max_connections; i++) {
     connections[i] = -1;
   }
-
-  // set control handler to make cleanup after server shutdown
-  SetConsoleCtrlHandler(_control_handler, TRUE);
 
   // start handling connections
   while (!g_quit) {
@@ -62,13 +67,15 @@ int handle_connections
         SOCKET client_socket = accept(listen_socket, NULL, NULL);
 
         if (client_socket == INVALID_SOCKET && !g_quit) {
-          error_set_last(2, itoa(WSAGetLastError(), temp, 10));
+          error_set_last_with_code(2, WSAGetLastError());
         }
         else {
           // add new client socket to the first free connections slot
           for (int i = 1; i <= max_connections; i++) {
             if (connections[i] < 0) {
               connections[i] = client_socket;
+              if (g_sock_acc_cb)
+                g_sock_acc_cb(connections[i]);
               break;
             }
           }
@@ -83,7 +90,9 @@ int handle_connections
         if (connections[i] > 0 && FD_ISSET(connections[i], &fd_read_set)) {
 
           // run user defined callback function
-          CB_RESULT res = callback(connections[i]);
+          CB_RESULT res = CB_CLOSE_SOCKET;
+          if (g_io_cb)
+            res = g_io_cb(connections[i]);
 
           // react to callback result
           switch (res) {
@@ -102,7 +111,7 @@ int handle_connections
     }
     else {
       if (!g_quit)
-        error_set_last(3, itoa(WSAGetLastError(), temp, 10));
+        error_set_last_with_code(3, WSAGetLastError());
     }
   } // while (TRUE)
 
@@ -165,7 +174,7 @@ SOCKET create_listen_socket
   // get address info
   int err_code = getaddrinfo(host, port, &hints, &result);
   if (err_code) {
-    error_set_last(5, itoa(err_code, temp, 10));
+    error_set_last_with_code(5, err_code);
     WSACleanup();
     return INVALID_SOCKET;
   }
@@ -189,7 +198,7 @@ SOCKET create_listen_socket
   }
 
   if (listen_socket == INVALID_SOCKET) {
-    error_set_last(6, itoa(WSAGetLastError(), temp, 10));
+    error_set_last_with_code(6, WSAGetLastError());
     freeaddrinfo(result);
     WSACleanup();
     return INVALID_SOCKET;
@@ -199,11 +208,21 @@ SOCKET create_listen_socket
 
   // listen for connections
   if (listen(listen_socket, SOMAXCONN) == SOCKET_ERROR) {
-    error_set_last(7, itoa(WSAGetLastError(), temp, 10));
+    error_set_last_with_code(7, WSAGetLastError());
     closesocket(listen_socket);
     WSACleanup();
     return INVALID_SOCKET;
   }
 
   return listen_socket;
+}
+
+void on_IO_request(IO_CALLBACK callback)
+{
+  g_io_cb = callback;
+}
+
+void on_socket_accept(SOCK_ACCEPT_CALLBACK callback)
+{
+  g_sock_acc_cb = callback;
 }

@@ -10,8 +10,8 @@ typedef int CB_RESULT;
 #define CB_CONTINUE 0
 #define CB_CLOSE_SOCKET 1
 
-// defines callback function for handle_connections
 typedef CB_RESULT(*IO_CALLBACK)(SOCKET client_socket);
+typedef void(*SOCK_ACCEPT_CALLBACK)(SOCKET client_socket);
 
 int init_winsock();
 
@@ -21,6 +21,10 @@ SOCKET create_listen_socket
   const char* const port,
   int socket_type, int address_family, int protocol
 );
+
+void on_IO_request(IO_CALLBACK callback);
+
+void on_socket_accept(SOCK_ACCEPT_CALLBACK callback);
 
 /// @brief starts infinite loop to handle client connections
 /// @param listen_socket socket to listen on

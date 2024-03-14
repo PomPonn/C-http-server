@@ -90,7 +90,7 @@ int main() {
 
   SOCKET server = create_http_server("localhost", "80");
 
-  http_server_listen(server, 128, on_connection);
+  http_server_listen(server, 128);
 
   return 0;
 }
