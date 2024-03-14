@@ -2,6 +2,8 @@
 
 #include "error.h"
 
+#define WINDOWS_LEAN_AND_MEAN
+
 #include <WinSock2.h> // socket library
 #include <ws2tcpip.h> // address resolve
 

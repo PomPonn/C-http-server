@@ -86,7 +86,17 @@ void on_connection(http_request req, http_response res) {
     }*/
 }
 
+void on_socket_close(SOCKET socket) {
+  printf("connection closed on socket: %d\n", (int)socket);
+}
+
+void on_socket_open(SOCKET socket) {
+  printf("connection opened on socket: %d\n", (int)socket);
+}
+
 int main() {
+  http_bind_listener(HTTP_EVENT_CONNECTION_OPEN, on_socket_open);
+  http_bind_listener(HTTP_EVENT_CONNECTION_CLOSE, on_socket_close);
 
   SOCKET server = create_http_server("localhost", "80");
 

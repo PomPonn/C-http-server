@@ -162,6 +162,9 @@ int resolve_http_request_line(char* const buffer, http_request* result) {
 
   // find next space
   ptr = strchr(buffer, ' ');
+  if (!ptr)
+    return -1;
+
   len = ptr - buffer;
   if (len + 1 > SMALL_BUFLEN)
     return -1;
@@ -200,6 +203,9 @@ int resolve_http_request_line(char* const buffer, http_request* result) {
 
   // find next space
   ptr2 = strchr(++ptr, ' ');
+  if (!ptr2)
+    return -1;
+
   len = ptr2 - ptr;
   if (len + 1 > _HEADERLINESIZE_)
     return -3;
@@ -207,12 +213,32 @@ int resolve_http_request_line(char* const buffer, http_request* result) {
   // copy string to next space to the resource buffer
   strncpy_s(result->url_path, SMALL_BUFLEN, ptr, len);
 
-  // find dot
-  ptr = strchr(++ptr2, '.');
+  // find next slash
+  ptr = strchr(++ptr2, '/');
+  if (!ptr)
+    return -1;
+
+  char version_buffer[SMALL_BUFLEN];
+
+  // copy version string
+  ptr++;
+  int c = 0;
+  while (*ptr != ' ' && *ptr != '\r' && *ptr != '\0') {
+    version_buffer[c++] = *ptr++;
+  }
+
+  if (*ptr == '\0')
+    return -2;
 
   // set version
-  result->version.major = char_to_int(*(ptr - 1));
-  result->version.minor = char_to_int(*(ptr + 1));
+  result->version.major = char_to_int(version_buffer[0]);
+  if (version_buffer[1] == '.') {
+    result->version.minor = char_to_int(version_buffer[2]);
+  }
+  else {
+    result->version.minor = 0;
+  }
+
   if (result->version.major < 0 || result->version.minor < 0)
     return -4;
 

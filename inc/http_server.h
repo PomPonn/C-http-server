@@ -14,6 +14,7 @@ typedef unsigned int SOCKET;
 typedef void (*HTTP_REQUEST_CALLBACK)(http_request req, http_response res);
 typedef void (*HTTP_CONNECTION_CLOSE_CALLBACK)(SOCKET socket);
 typedef void (*HTTP_CONNECTION_OPEN_CALLBACK)(SOCKET socket);
+typedef void (*HTTP_UPGRADE_CALLBACK)(SOCKET socket);
 
 /// @brief bind listener to specified event
 /// @param event available events: "request", "connection close", "connection open"

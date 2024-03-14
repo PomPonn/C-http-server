@@ -5,4 +5,4 @@
 - fix: for some reason when client requests favicon.ico and server responds with 404 then client still keeps connection alive.
 It probably should be closed.
 - define callbacks
-- extend http interface
+- extend http interface #

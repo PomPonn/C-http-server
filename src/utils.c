@@ -1,5 +1,6 @@
 #include "utils.h"
 
+#include <Windows.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -28,7 +29,7 @@ char* get_buffer_line(char* strbuf, char* linebuf, unsigned int linebuff_size) {
   return end;
 }
 
-int get_resource(const char* const path, char** const content) {
+int read_file(const char* const path, char** const content) {
   // open file
   FILE* fp;
   fopen_s(&fp, path, "rb");
@@ -54,4 +55,13 @@ int get_resource(const char* const path, char** const content) {
 void free_resource(char* content) {
   free(content);
   content = NULL;
+}
+
+BOOL get_working_directory(char* buffer, int buffer_size)
+{
+  if (!GetCurrentDirectory(buffer_size, buffer)) {
+    return 0;
+  }
+
+  return 1;
 }

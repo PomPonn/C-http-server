@@ -8,11 +8,13 @@
 char* get_buffer_line(char* strbuf, char* linebuf, unsigned int linebuff_size);
 
 /// @brief read file in specified path in binary mode
-/// @param path path to the resource
+/// @param path path to the file
 /// @param content returns file content
 /// @return error code
-int get_resource(const char* const path, char** const content);
+int read_file(const char* const path, char** const content);
 
 /// @brief frees allocated resource
 /// @param content pointer to the resource
 void free_resource(char* content);
+
+int get_working_directory(char* buffer, int buffer_size);
