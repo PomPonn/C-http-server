@@ -13,6 +13,7 @@
 // user might redefine these macros
 #define _PATHSIZE_ 256
 #define _HEADERLINESIZE_ 512
+#define _VARIANTSIZE_ 64
 
 typedef int req_method;
 typedef char* http_response;
@@ -25,6 +26,7 @@ typedef struct http_version {
 typedef struct http_request {
   req_method method;
   http_version version;
+  char variant[_VARIANTSIZE_];
   char url_path[_PATHSIZE_];
   char* content;
 } http_request;
@@ -38,25 +40,30 @@ typedef struct http_header {
 /// @param header pointer to the header
 void http_header_free(http_header* header);
 
+/// @brief frees allocated http response
+/// @param response pointer to http response
+void http_response_free(char* response);
+
 /// @brief looks for value of given http header name and sets it in header->value
 /// @param buffer buffer containg http headers
-/// @param header pointer to `http_header` struct;
-///        header->name defines name of the header to search for;
-///        header->value contains found value (if found, header should be freed with http_header_free)
+/// @param header_name defines name of the header to search for
+/// @param header_value contains allocated found value (if found, header should be freed with http_header_free)
 /// @return 1 if found, 0 if not
-int get_http_header_value(char* const buffer, http_header* const header);
+int http_get_header
+(char* const buffer, const char* const header_name, char* const header_value);
 
 /// @brief checks if given string is a value of given http header content
 /// @param header_value header content (value)
 /// @param delim sign which separates values in header content
-/// @param str value to search for
+/// @param value value to search for
 /// @return 1 if found, 0 if not
-int is_in_http_header(const http_header* const header, char delim, char* str);
+int http_is_value_in_header(const http_header* const header, char delim, char* value);
 
-/// @brief calculates total size of headers after converting to string
+/// @brief calculates total size of headers after converting them to string
 int _total_headers_size(const http_header* const headers, int h_count);
 
 /// @brief builds http request from specified parameters
+/// @param http_variant http or https
 /// @param version http version
 /// @param status example of status: "200 OK" '<status code> <status info>'
 /// @param headers pointer to `http_header` array
@@ -65,17 +72,14 @@ int _total_headers_size(const http_header* const headers, int h_count);
 /// @param response_size stores size of built response
 /// @returns pointer to built http response
 char* build_http_response(
+  const char* const http_variant,
   http_version version,
-  char* const status,
+  const char* const status,
   const http_header* const headers,
-  int h_count,
+  int headers_count,
   char* const body,
   int* const response_size
 );
-
-/// @brief frees allocated http response
-/// @param response pointer to http response
-void free_http_response(char* response);
 
 /// @brief resolves http request line in specified buffer
 /// @param line_buffer buffer containing request

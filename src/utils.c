@@ -5,6 +5,14 @@
 #include <stdio.h>
 #include <string.h>
 
+char* str_find_char(const char* str, const char c) {
+  return strchr(str, c);
+}
+
+char* str_find_char_reversed(const char* str, const char c) {
+  return strrchr(str, c);
+}
+
 char* get_buffer_line(char* strbuf, char* linebuf, unsigned int linebuff_size) {
   if (!strbuf) return NULL;
 
@@ -52,7 +60,7 @@ int read_file(const char* const path, char** const content) {
   return file_size;
 }
 
-void free_resource(char* content) {
+void free_content(char* content) {
   free(content);
   content = NULL;
 }
@@ -64,4 +72,25 @@ BOOL get_working_directory(char* buffer, int buffer_size)
   }
 
   return 1;
+}
+
+void get_file_extension(const char* const filepath, char* const extension) {
+  char* eptr = extension;
+  char* pptr;
+
+  // find last dot
+  if (!(pptr = strrchr(filepath, '.'))) {
+    *extension = '\0';
+    return;
+  }
+
+  pptr++;
+
+  while (*pptr)
+  {
+    *eptr = *pptr;
+    eptr++;
+    pptr++;
+  }
+  *eptr = '\0';
 }

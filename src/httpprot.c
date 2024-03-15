@@ -8,46 +8,44 @@
 
 #define SMALL_BUFLEN 64
 
-// defines size of static elements in http response, e.g. HTTP/1.1 is size of 8
-#define _RESP_FIXED_SIZE 14
+// defines size of static elements in http response
+#define _RESP_FIXED_SIZE 6
 
 #define CRLF "\r\n"
 // convert ASCII character to integer
 #define char_to_int(c) (c) - 48
-
 
 void http_header_free(http_header* header) {
   free(header->value);
   header->value = NULL;
 }
 
-void free_http_response(char* response) {
+void http_response_free(char* response) {
   free(response);
   response = NULL;
 }
 
-int is_in_http_header(const http_header* const header, char delim, char* str) {
+int http_is_value_in_header(const http_header* const header, char delim, char* value) {
   char temp[SMALL_BUFLEN];
   int len = 0, quit = 0;
   const char* pstart = header->value, * pend;
 
   do {
-    pend = strchr(pstart, delim); // find end of header value item
-    // check if strchr succeeded
-    if (!pend) {
-      pend = strchr(pstart, '\0');
+    if (!(pend = str_find_char(pstart, delim))) { // find end of header value item
+      pend = str_find_char(pstart, '\0');
       quit = 1;
     }
+
     len = pend - pstart;
 
-    if (len + 1 > SMALL_BUFLEN) {
+    if (len >= SMALL_BUFLEN) {
       return 0;
     }
 
     strncpy_s(temp, SMALL_BUFLEN, pstart, len);
 
     // compare
-    if (strcmp(temp, str) == 0) {
+    if (strcmp(temp, value) == 0) {
       return 1;
     }
     else {
@@ -63,37 +61,51 @@ int is_in_http_header(const http_header* const header, char delim, char* str) {
   return 0;
 }
 
-int get_http_header_value(char* const buffer, http_header* const header) {
+int http_get_header
+(char* const buffer, const char* const header_name, char* header_value) {
+  if (!buffer || !header_name) return 0;
+
   char line[_HEADERLINESIZE_];
   char temp[SMALL_BUFLEN];
-  char* lptr = buffer;
-  char* ptr;
+  char* lptr = buffer, * ptr;
   int len = 0;
 
   while (lptr = get_buffer_line(lptr, line, _HEADERLINESIZE_)) {
-    ptr = strchr(line, ':'); // find end of header name
+    if (!(ptr = str_find_char(line, ':'))) { // find end of header name
+      // if there is no header name in the line, it means that message body is next
+      // so the header isnt found
+      break;
+    }
+
+    // header name length
     len = ptr - line;
-    if (len + 1 > SMALL_BUFLEN) {
-      return 0;
+
+    if (len >= SMALL_BUFLEN) {
+      break;
     }
 
     strncpy_s(temp, SMALL_BUFLEN, line, len);
-    if (strcmp(temp, header->name) == 0) {
-      ptr += 2; // increase pointer so it points to the header value
 
-      char* end_of_value = strchr(ptr, '\0');
-      len = end_of_value - ptr;
+    if (strcmp(temp, header_name) == 0) {
+      if (header_value) {
+        // increase pointer so it points to the header value
+        do {
+          ptr++;
+        } while (*ptr == ' ');
 
-      header->value = malloc(len + 1);
+        char* end_of_value = str_find_char(ptr, '\0');
 
-      // set header value
-      strncpy_s(header->value, len + 1, ptr, len);
-      header->value[len] = '\0';
+        len = end_of_value - ptr;
 
+        header_value = malloc(len + 1);
+
+        // set header value
+        strncpy_s(header_value, len + 1, ptr, len);
+        header_value[len] = '\0';
+      }
       return 1;
     }
   }
-
 
   return 0;
 }
@@ -110,26 +122,45 @@ int _total_headers_size(const http_header* const headers, int h_count) {
 
 char* build_http_response
 (
+  const char* const http_variant,
   http_version version,
-  char* status,
+  const char* const status,
   const http_header* const headers,
   int h_count,
-  char* body,
-  int* response_size
+  char* const body,
+  int* const response_size
 ) {
-  int resp_size =
-    _RESP_FIXED_SIZE + strlen(status) + _total_headers_size(headers, h_count) + strlen(body);
+  int resp_size = _RESP_FIXED_SIZE +
+    strlen(http_variant) + strlen(status) +
+    _total_headers_size(headers, h_count) + strlen(body);
+
+  if (version.minor == 0) {
+    resp_size += 1; // <major>
+  }
+  else {
+    resp_size += 3; // <major>.<minor>
+  }
 
   char* response = malloc(resp_size);
   // mark as empty
   *response = '\0';
 
+  // concat http variant to response
+  strcat_s(response, resp_size, http_variant);
+
   // construct version string
-  char temp[10];
-  sprintf_s(temp, sizeof(temp), "HTTP/%d.%d ", version.major, version.minor);
+  char temp[8];
+  if (version.minor == 0) {
+    sprintf_s(temp, sizeof(temp), "/%d ", version.major);
+  }
+  else {
+    // <major>.<minor>
+    sprintf_s(temp, sizeof(temp), "/%d.%d ", version.major, version.minor);
+  }
 
   // concat version string to response
   strcat_s(response, resp_size, temp);
+
   // concat status string to respone
   strcat_s(response, resp_size, status);
   // end line
@@ -161,13 +192,14 @@ int resolve_http_request_line(char* const buffer, http_request* result) {
   char temp[SMALL_BUFLEN];
 
   // find next space
-  ptr = strchr(buffer, ' ');
-  if (!ptr)
+  if (!(ptr = strchr(buffer, ' '))) {
     return -1;
+  }
 
   len = ptr - buffer;
-  if (len + 1 > SMALL_BUFLEN)
-    return -1;
+
+  if (len >= SMALL_BUFLEN)
+    return -2;
 
   // copy string to next space to the buffer
   strncpy_s(temp, SMALL_BUFLEN, buffer, len);
@@ -198,37 +230,46 @@ int resolve_http_request_line(char* const buffer, http_request* result) {
     result->method = HTTP_PATCH;
   }
   else {
-    return -2;
+    return -3;
   }
 
   // find next space
-  ptr2 = strchr(++ptr, ' ');
-  if (!ptr2)
+  if (!(ptr2 = strchr(++ptr, ' '))) {
     return -1;
+  }
 
   len = ptr2 - ptr;
-  if (len + 1 > _HEADERLINESIZE_)
+
+  if (len >= _PATHSIZE_)
     return -3;
 
   // copy string to next space to the resource buffer
-  strncpy_s(result->url_path, SMALL_BUFLEN, ptr, len);
+  strncpy_s(result->url_path, _PATHSIZE_, ptr, len);
 
   // find next slash
-  ptr = strchr(++ptr2, '/');
-  if (!ptr)
+  if (!(ptr = strchr(++ptr2, '/'))) {
     return -1;
+  }
 
   char version_buffer[SMALL_BUFLEN];
 
   // copy version string
   ptr++;
   int c = 0;
-  while (*ptr != ' ' && *ptr != '\r' && *ptr != '\0') {
+
+  while (*ptr != ' ' && (*ptr != '\r' || *(ptr + 1) != '\n') && *ptr != '\0') {
     version_buffer[c++] = *ptr++;
   }
 
   if (*ptr == '\0')
-    return -2;
+    return -4;
+
+  // copy variant
+  c = 0;
+  while (ptr2 != ptr) {
+    result->variant[c++] = *ptr2++;
+  }
+  result->variant[c] = '\0';
 
   // set version
   result->version.major = char_to_int(version_buffer[0]);
@@ -248,18 +289,4 @@ int resolve_http_request_line(char* const buffer, http_request* result) {
   }
 
   return 0;
-}
-
-void get_file_extension(const char* const filepath, char* const extension) {
-  // find last dot
-  char* pptr = strrchr(filepath, '.'), * eptr = extension;
-  pptr++;
-
-  while (*pptr)
-  {
-    *eptr = *pptr;
-    eptr++;
-    pptr++;
-  }
-  *eptr = '\0';
 }
