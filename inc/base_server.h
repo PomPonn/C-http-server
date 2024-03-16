@@ -12,6 +12,8 @@ typedef int CB_RESULT;
 
 typedef CB_RESULT(*IO_CALLBACK)(SOCKET client_socket);
 typedef void(*SOCK_ACCEPT_CALLBACK)(SOCKET client_socket);
+typedef void(*SERVER_CLOSE_CALLBACK)(void);
+typedef void(*SERVER_OPEN_CALLBACK)(void);
 
 int init_winsock();
 
@@ -25,6 +27,10 @@ SOCKET create_listen_socket
 void on_IO_request(IO_CALLBACK callback);
 
 void on_socket_accept(SOCK_ACCEPT_CALLBACK callback);
+
+void on_server_open(SERVER_OPEN_CALLBACK callback);
+
+void on_server_close(SERVER_CLOSE_CALLBACK callback);
 
 /// @brief starts infinite loop to handle client connections
 /// @param listen_socket socket to listen on

@@ -13,6 +13,8 @@
 HTTP_REQUEST_CALLBACK _g_onreq = NULL;
 HTTP_CONNECTION_CLOSE_CALLBACK _g_onconnclose = NULL;
 HTTP_CONNECTION_OPEN_CALLBACK _g_onconnopen = NULL;
+HTTP_SERVER_OFF_CALLBACK _g_onservoff = NULL;
+HTTP_SERVER_ON_CALLBACK _g_onservon = NULL;
 HTTP_UPGRADE_CALLBACK _g_onupgrade = NULL;
 
 CB_RESULT IO_callback(SOCKET client_socket) {
@@ -75,8 +77,15 @@ void http_bind_listener(HTTP_EVENT event, void* callback)
   case HTTP_EVENT_CONNECTION_CLOSE:
     _g_onconnclose = (HTTP_CONNECTION_CLOSE_CALLBACK)callback;
     break;
+  case HTTP_EVENT_SERVER_ON:
+    _g_onservon = (HTTP_SERVER_ON_CALLBACK)callback;
+    break;
+  case HTTP_EVENT_SERVER_OFF:
+    _g_onservoff = (HTTP_SERVER_OFF_CALLBACK)callback;
+    break;
   case HTTP_EVENT_UPGRADE:
     _g_onupgrade = (HTTP_UPGRADE_CALLBACK)callback;
+    break;
   default: break;
   }
 }
@@ -101,6 +110,8 @@ SOCKET create_http_server
 int http_server_listen
 (SOCKET server_socket, int max_connections) {
   on_socket_accept(_g_onconnopen);
+  on_server_open(_g_onservon);
+  on_server_close(_g_onservoff);
 
   if (handle_connections(server_socket, max_connections, IO_callback)) {
     return -1;

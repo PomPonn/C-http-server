@@ -18,6 +18,8 @@ BOOL g_quit = FALSE;
 
 IO_CALLBACK g_io_cb = NULL;
 SOCK_ACCEPT_CALLBACK g_sock_acc_cb = NULL;
+SERVER_CLOSE_CALLBACK g_serv_close_cb = NULL;
+SERVER_OPEN_CALLBACK g_serv_open_cb = NULL;
 
 BOOL WINAPI _control_handler(DWORD ctrl_type);
 
@@ -50,6 +52,9 @@ int handle_connections
     connections[i] = -1;
   }
 
+  if (g_serv_open_cb)
+    g_serv_open_cb();
+
   // start handling connections
   while (!g_quit) {
     // set fd_read_set before select call
@@ -61,6 +66,9 @@ int handle_connections
 
     // wait until select return
     ret_val = select(0, &fd_read_set, NULL, NULL, NULL);
+    if (g_quit) {
+      break;
+    }
 
     if (ret_val > 0) {
       // check if socket with event is listen_socket
@@ -68,7 +76,7 @@ int handle_connections
         // accept new client connection
         SOCKET client_socket = accept(listen_socket, NULL, NULL);
 
-        if (client_socket == INVALID_SOCKET && !g_quit) {
+        if (client_socket == INVALID_SOCKET) {
           error_set_last_with_code(2, WSAGetLastError());
         }
         else {
@@ -134,6 +142,9 @@ BOOL WINAPI _control_handler(DWORD ctrl_type) {
       }
     }
     MemFree(connections);
+
+    if (g_serv_close_cb)
+      g_serv_close_cb();
 
     WSACleanup();
 
@@ -227,4 +238,14 @@ void on_IO_request(IO_CALLBACK callback)
 void on_socket_accept(SOCK_ACCEPT_CALLBACK callback)
 {
   g_sock_acc_cb = callback;
+}
+
+void on_server_open(SERVER_OPEN_CALLBACK callback)
+{
+  g_serv_open_cb = callback;
+}
+
+void on_server_close(SERVER_CLOSE_CALLBACK callback)
+{
+  g_serv_close_cb = callback;
 }

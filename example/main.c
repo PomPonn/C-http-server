@@ -9,6 +9,7 @@
 
 #define MAX_PATH_SIZE 256
 #define MAX_CONTENT_SIZE_STRLEN 64
+#define DEFAULT_PORT "80"
 
 #define ROOT_PATH "C:/Users/gangs/OneDrive/Dokumenty/MyStuff/Projects/C_HTTP_server/"
 
@@ -108,19 +109,29 @@ void on_request(http_request* req, http_response* res) {
     free_content(resource_content);
 }
 
+void on_socket_open(SOCKET socket) {
+  printf("connection opened on socket: %d\n", (int)socket);
+}
+
 void on_socket_close(SOCKET socket) {
   printf("connection closed on socket: %d\n", (int)socket);
 }
 
-void on_socket_open(SOCKET socket) {
-  printf("connection opened on socket: %d\n", (int)socket);
+void on_server_on() {
+  printf("server listening on port: %s...\n\n", DEFAULT_PORT);
+}
+
+void on_server_off() {
+  printf("server stopped listening\n");
 }
 
 int main() {
   http_bind_listener(HTTP_EVENT_CONNECTION_OPEN, on_socket_open);
   http_bind_listener(HTTP_EVENT_CONNECTION_CLOSE, on_socket_close);
+  http_bind_listener(HTTP_EVENT_SERVER_ON, on_server_on);
+  http_bind_listener(HTTP_EVENT_SERVER_OFF, on_server_off);
 
-  SOCKET server = create_http_server("localhost", "80", on_request);
+  SOCKET server = create_http_server("localhost", DEFAULT_PORT, on_request);
 
   http_server_listen(server, 128);
 
