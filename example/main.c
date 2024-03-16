@@ -25,16 +25,15 @@ record_str_t mime_types[] = {
 };
 
 void on_request(http_request* req, http_response* res) {
-  http_header_list_item* headers;
+  http_header* headers = NULL;
+  char* status = NULL;
+  int h_count = 0;
+  char* resource_content = NULL;
+  int resource_size = 0;
 
   switch (req->method)
   {
   case HTTP_GET: {
-    char* status;
-    int h_count = 0;
-    char* resource_content = NULL;
-    int resource_size = 0;
-
     // concat paths
     char full_path[MAX_PATH_SIZE] = ROOT_PATH;
     // use url_append here because it works fine in this case
@@ -49,8 +48,8 @@ void on_request(http_request* req, http_response* res) {
       status = "404 Not Found";
 
       // add item to headers list
-      h_count++;
-      headers = http_create_header_list(1,
+      h_count = 1;
+      headers = http_create_header_array(h_count,
         (http_header[]) {
           { "Content-Length", "0" },
       });
@@ -71,41 +70,42 @@ void on_request(http_request* req, http_response* res) {
       status = "200 OK";
 
       // add headers
-      headers = http_create_header_list(2,
+      h_count = 2;
+      headers = http_create_header_array(h_count,
         (http_header[]) {
           { "Content-Type", mime_type },
           { "Content-Length", content_size_str },
       });
     }
-    *res = http_build_response(
-      req->variant,
-      req->version,
-      status,
-      headers,
-      h_count,
-      resource_content,
-      &resource_size
-    );
 
-    http_destroy_header_list(headers);
-    free_content(resource_content);
     break;
   }
   default: {
-    headers = http_create_header_list(1,
+    h_count = 1;
+    headers = http_create_header_array(1,
       (http_header[]) {
       "Content-Length", "0"
     });
+    status = "404 Not Found";
 
-    *res = http_build_response(
-      req->variant,
-      req->version,
-      "404 Not Found",
-      headers,
-      1, NULL, NULL);
     break;
   }
   }
+
+  *res = http_build_response(
+    req->variant,
+    req->version,
+    status,
+    headers,
+    h_count,
+    resource_content,
+    &resource_size
+  );
+
+  if (headers)
+    http_destroy_header_array(headers);
+  if (resource_content)
+    free_content(resource_content);
 }
 
 void on_socket_close(SOCKET socket) {

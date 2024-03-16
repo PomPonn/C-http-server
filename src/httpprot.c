@@ -15,13 +15,6 @@
 // convert ASCII character to integer
 #define char_to_int(c) (c) - 48
 
-#define add_header_elem(elem, header) \
-elem = malloc(sizeof(http_header_list_item)); \
-elem->item = malloc(sizeof(http_header)); \
-*elem->item = header; \
-elem->next = NULL; \
-
-
 void http_response_free(http_response response) {
   free(response);
   response = NULL;
@@ -112,48 +105,32 @@ int http_get_header
   return 0;
 }
 
-int _total_headers_size(const http_header_list_item* headers, int h_count) {
+int _total_headers_size(const http_header* headers, int h_count) {
   int tsize = 0;
-  const http_header_list_item* ptr = headers;
 
-  while (ptr) {
-    tsize += str_length(ptr->item->name) + str_length(ptr->item->value) + 4 /* '\r\n' and ': ' */;
-
-    ptr = ptr->next;
+  for (int i = 0; i < h_count; i++) {
+    tsize += str_length(headers[i].name) + str_length(headers[i].value) + 4 /* '\r\n' and ': ' */;
   }
 
   return tsize;
 }
 
-http_header_list_item* http_create_header_list
-(int list_size, http_header* init_list) {
-  if (list_size < 1) return NULL;
+http_header* http_create_header_array
+(int arr_size, http_header* init_list) {
+  if (arr_size < 1 || !init_list) return NULL;
 
+  http_header* result = malloc(sizeof(http_header) * arr_size);
 
-  http_header_list_item* list;
-  add_header_elem(list, init_list[0]);
-
-  http_header_list_item* ptr = list;
-
-  for (int i = 1; i < list_size; i++) {
-    add_header_elem(ptr->next, init_list[i]);
-
-    ptr = ptr->next;
+  for (int i = 0; i < arr_size; i++) {
+    result[i] = init_list[i];
   }
 
-  return list;
+  return result;
 }
 
-void http_destroy_header_list(http_header_list_item* list) {
-  http_header_list_item* ptr = list, * next;
-
-  while (ptr) {
-    free(ptr->item);
-    next = ptr->next;
-    free(ptr);
-
-    ptr = next;
-  }
+void http_destroy_header_array(http_header* array) {
+  free(array);
+  array = NULL;
 }
 
 char* http_build_response
@@ -161,11 +138,13 @@ char* http_build_response
   const char* const http_variant,
   http_version version,
   const char* const status,
-  const http_header_list_item* headers,
+  const http_header* headers,
   int h_count,
   char* const body,
   int* const response_size
 ) {
+  if (!http_variant || !status) return NULL;
+
   int resp_size = _RESP_FIXED_SIZE +
     str_length(http_variant) + str_length(status) +
     _total_headers_size(headers, h_count) + str_length(body);
@@ -202,17 +181,13 @@ char* http_build_response
   // end line
   strcat_s(response, resp_size, CRLF);
 
-  const http_header_list_item* hptr = headers;
-
-  while (hptr) {
+  for (int i = 0; i < h_count; i++) {
     // add header content
-    strcat_s(response, resp_size, hptr->item->name);
+    strcat_s(response, resp_size, headers[i].name);
     strcat_s(response, resp_size, ": ");
-    strcat_s(response, resp_size, hptr->item->value);
+    strcat_s(response, resp_size, headers[i].value);
     // end line
     strcat_s(response, resp_size, CRLF);
-
-    hptr = hptr->next;
   }
 
   // add empty line to indicate start of message body
@@ -301,6 +276,7 @@ int resolve_http_request_line(char* const buffer, http_request* result) {
   while (*vptr != ' ' && (*vptr != '\r' || *(vptr + 1) != '\n') && *vptr != '\0') {
     version_buffer[c++] = *vptr++;
   }
+  version_buffer[c] = '\0';
 
   if (*vptr == '\0')
     return -4;

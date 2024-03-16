@@ -57,6 +57,8 @@ CB_RESULT IO_callback(SOCKET client_socket) {
     if (send(client_socket, res, str_length(res), 0) == SOCKET_ERROR) {
       error_set_last_with_code(8, WSAGetLastError());
     }
+    if (res)
+      http_response_free(res);
   }
   return CB_CONTINUE;
 }
