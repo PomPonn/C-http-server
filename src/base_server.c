@@ -43,6 +43,14 @@ int handle_connections
   int ret_val = 0;
   g_max_conns = max_connections;
 
+  // listen for connections
+  if (listen(listen_socket, SOMAXCONN) == SOCKET_ERROR) {
+    error_set_last_with_code(7, WSAGetLastError());
+    closesocket(listen_socket);
+    WSACleanup();
+    return INVALID_SOCKET;
+  }
+
   // allocate memory for client sockets (+1 server socket)
   connections = MemAlloc(0, sizeof(SOCKET) * (max_connections + 1));
 
@@ -195,24 +203,8 @@ SOCKET create_listen_socket
     return INVALID_SOCKET;
   }
 
-  SOCKET listen_socket;
-  ptr = result;
-
-  while (ptr->ai_addr != NULL) {
-    // create socket
-    listen_socket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
-    if (listen_socket != INVALID_SOCKET) {
-      // bind socket
-      err_code = bind(listen_socket, result->ai_addr, result->ai_addrlen);
-
-      if (!err_code)
-        break;
-
-      listen_socket = INVALID_SOCKET;
-      ptr = ptr->ai_next;
-    }
-  }
-
+  // create socket
+  SOCKET listen_socket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
   if (listen_socket == INVALID_SOCKET) {
     error_set_last_with_code(6, WSAGetLastError());
     freeaddrinfo(result);
@@ -220,11 +212,21 @@ SOCKET create_listen_socket
     return INVALID_SOCKET;
   }
 
+  err_code = bind(listen_socket, result->ai_addr, result->ai_addrlen);
+  if (listen_socket == INVALID_SOCKET) {
+    error_set_last_with_code(6, WSAGetLastError());
+    freeaddrinfo(result);
+    closesocket(listen_socket);
+    WSACleanup();
+    return INVALID_SOCKET;
+  }
+
   freeaddrinfo(result);
 
-  // listen for connections
-  if (listen(listen_socket, SOMAXCONN) == SOCKET_ERROR) {
-    error_set_last_with_code(7, WSAGetLastError());
+  unsigned long io_mode = 1;
+  err_code = ioctlsocket(listen_socket, FIONBIO, &io_mode);
+  if (err_code == SOCKET_ERROR) {
+    error_set_last_with_code(6, WSAGetLastError());
     closesocket(listen_socket);
     WSACleanup();
     return INVALID_SOCKET;
