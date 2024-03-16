@@ -26,4 +26,4 @@ void on_server_open(SERVER_OPEN_CALLBACK callback);
 void on_server_close(SERVER_CLOSE_CALLBACK callback);
 
 int create_server
-(char* host, char* port, int server_socket_type, int address_family, int protocol, int max_connections);
+(const char* host, const char* port, int server_socket_type, int address_family, int protocol, int max_connections);

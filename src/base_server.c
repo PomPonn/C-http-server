@@ -3,6 +3,7 @@
 #include "error.h"
 
 #define WINDOWS_LEAN_AND_MEAN
+#define FD_SETSIZE 1024
 
 #include <WinSock2.h> // socket library
 #include <ws2tcpip.h> // address resolve
@@ -23,7 +24,8 @@ SERVER_OPEN_CALLBACK g_serv_open_cb = NULL;
 
 BOOL WINAPI _control_handler(DWORD ctrl_type);
 
-int create_server(char* host, char* port, int server_socket_type, int address_family, int protocol, int max_connections)
+int create_server
+(const char* host, const char* port, int server_socket_type, int address_family, int protocol, int max_connections)
 {
   if (!port || max_connections < 1) {
     error_set_last(1, "create_server");
@@ -31,13 +33,14 @@ int create_server(char* host, char* port, int server_socket_type, int address_fa
     return -1;
   }
   g_max_conns = max_connections;
-  /*
-    //
-    // Create server socket
-    //
-    struct addrinfo hints, * result = NULL;
-    char temp[8];
-    u_long io_mode = 1;
+
+  //
+  // Create server socket
+  //
+  SOCKET server_socket = INVALID_SOCKET;
+  struct addrinfo hints, * result = NULL;
+  char temp[8];
+  u_long io_mode = 1;
 
   // set hints struct
   ZeroMemory(&hints, sizeof(hints));
@@ -55,7 +58,7 @@ int create_server(char* host, char* port, int server_socket_type, int address_fa
   }
 
   // Create server socket
-  SOCKET server_socket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
+  server_socket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
   if (server_socket == INVALID_SOCKET)
   {
     error_set_last_with_code(6, WSAGetLastError());
@@ -93,84 +96,6 @@ int create_server(char* host, char* port, int server_socket_type, int address_fa
     closesocket(server_socket);
     WSACleanup();
     return -1;
-  }
-*/
-  char temp[8];
-  struct addrinfo hints,
-    * results = NULL;
-
-  WSADATA       wsaData;
-  SOCKET server_socket = INVALID_SOCKET,
-    client_socket = INVALID_SOCKET;
-  DWORD         optval = 1;
-  char* pbuffer = NULL;
-  int  socket_count = 0,
-    bytesread = 0,
-    retval;
-  struct fd_set readfds;
-
-  // Load Winsock
-  if ((retval = WSAStartup(MAKEWORD(2, 2), &wsaData)) != 0)
-  {
-    fprintf(stderr, "WSAStartup failed with error %d\n", retval);
-    WSACleanup();
-    return -1;
-  }
-
-  // setup the hints structure for name resolution
-  memset(&hints, 0, sizeof(hints));
-  hints.ai_family = address_family;
-  hints.ai_protocol = IPPROTO_TCP;
-  hints.ai_socktype = SOCK_STREAM;
-  hints.ai_flags = AI_PASSIVE;
-
-  // Resolve the address to bind to. If AF_UNSPEC was specified, interface is NULL,
-  //    and IPv6 is installed, this call will return two addresses: 0.0.0.0 and ::
-  retval = getaddrinfo(
-    host,
-    port,
-    &hints,
-    &results
-  );
-  if (retval != 0)
-  {
-    fprintf(stderr, "getaddrinfo failed: %d\n", retval);
-  }
-
-  // Make sure the list is non-NULL
-  if (results == NULL)
-  {
-    fprintf(stderr, "Unable to resolve interface %s\n", 1);
-  }
-
-  struct addrinfo* addrptr = results;
-
-  // Create the server socket
-  server_socket = socket(addrptr->ai_family, addrptr->ai_socktype, addrptr->ai_protocol);
-  if (server_socket == INVALID_SOCKET)
-  {
-    fprintf(stderr, "socket failed: %d\n", WSAGetLastError());
-  }
-
-  // Bind the socket
-  retval = bind(server_socket, addrptr->ai_addr, (int)addrptr->ai_addrlen);
-  if (retval == SOCKET_ERROR)
-  {
-    fprintf(stderr, "bind failed: %d\n", WSAGetLastError());
-  }
-
-  // Make the socket non-blocking
-  retval = ioctlsocket(server_socket, FIONBIO, &optval);
-  if (retval == SOCKET_ERROR)
-  {
-    fprintf(stderr, "ioctlsocket failed: %d\n", WSAGetLastError());
-  }
-
-  // For TCP make the socket listening
-  retval = listen(server_socket, SOMAXCONN);
-  if (retval == SOCKET_ERROR)
-  {
-    fprintf(stderr, "listen failed: %d\n", WSAGetLastError());
   }
 
   // set control handler to make cleanup after server shutdown
@@ -240,7 +165,7 @@ int create_server(char* host, char* port, int server_socket_type, int address_fa
 
       // iterate connections in search of sockets with event
       for (int i = 1; i <= max_connections; i++) {
-        if (connections[i] != INVALID_SOCKET && FD_ISSET(connections[i], &fd_read_set)) {
+        if ((connections[i] != INVALID_SOCKET) && (FD_ISSET(connections[i], &fd_read_set))) {
 
           // run user defined callback function
           CB_RESULT res = CB_CLOSE_SOCKET;

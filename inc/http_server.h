@@ -34,4 +34,4 @@ void http_bind_listener(HTTP_EVENT event, void* callback);
 
 int http_init_server(HTTP_REQUEST_CALLBACK on_request);
 
-int http_server_listen(char* host, char* port, int max_connections);
+int http_server_listen(const char* host, const char* port, int max_connections);

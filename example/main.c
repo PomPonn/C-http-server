@@ -9,8 +9,8 @@
 #define MAX_PATH_SIZE 256
 #define MAX_CONTENT_SIZE_STRLEN 64
 
-#define DEFAULT_HOST "127.0.0.1"
-#define DEFAULT_PORT "3021"
+#define DEFAULT_HOST "localhost"
+#define DEFAULT_PORT "80"
 
 #define ROOT_PATH "C:/Users/gangs/OneDrive/Dokumenty/MyStuff/Projects/C_HTTP_server/"
 
@@ -138,7 +138,7 @@ int main() {
     error_last_print_message();
   }
 
-  if (!http_server_listen(DEFAULT_HOST, DEFAULT_PORT, 1024)) {
+  if (!http_server_listen(DEFAULT_HOST, DEFAULT_PORT, 100)) {
     error_last_print_message();
   }
 

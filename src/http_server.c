@@ -104,7 +104,7 @@ int http_init_server(HTTP_REQUEST_CALLBACK on_req) {
 }
 
 int http_server_listen
-(char* host, char* port, int max_connections) {
+(const char* host, const char* port, int max_connections) {
   on_socket_accept(_g_onconnopen);
   on_server_open(_g_onservon);
   on_server_close(_g_onservoff);
