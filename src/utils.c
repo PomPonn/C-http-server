@@ -13,6 +13,11 @@ char* str_find_char_reversed(const char* str, const char c) {
   return strrchr(str, c);
 }
 
+void int_to_string(int value, char* const buffer, int buffer_size)
+{
+  _itoa_s(value, buffer, buffer_size, 10);
+}
+
 // return length of string (0 if NULL is passed)
 int str_length(const char* str) {
   return str ? strlen(str) : 0;

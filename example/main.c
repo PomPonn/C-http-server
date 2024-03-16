@@ -1,9 +1,10 @@
 #include "http_server.h"
+
 #include "url.h"
 #include "utils.h"
+#include "error.h"
 #include "structs/record.h"
 
-#include <stdio.h>
 
 #define MAX_PATH_SIZE 256
 #define MAX_CONTENT_SIZE_STRLEN 64
@@ -133,10 +134,13 @@ int main() {
   http_bind_listener(HTTP_EVENT_SERVER_ON, on_server_on);
   http_bind_listener(HTTP_EVENT_SERVER_OFF, on_server_off);
 
+  if (!http_init_server(on_request)) {
+    error_last_print_message();
+  }
 
-  SOCKET server = create_http_server(DEFAULT_HOST, DEFAULT_PORT, on_request);
-
-  http_server_listen(server, 128);
+  if (!http_server_listen(DEFAULT_HOST, DEFAULT_PORT, 1024)) {
+    error_last_print_message();
+  }
 
   return 0;
 }

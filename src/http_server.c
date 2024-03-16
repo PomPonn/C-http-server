@@ -90,32 +90,28 @@ void http_bind_listener(HTTP_EVENT event, void* callback)
   }
 }
 
-SOCKET create_http_server
-(const char* const host, const char* const port, HTTP_REQUEST_CALLBACK on_request) {
+int http_init_server(HTTP_REQUEST_CALLBACK on_req) {
   if (!init_winsock()) {
-    return INVALID_SOCKET;
+    return 0;
   }
 
-  SOCKET server_socket = create_listen_socket(host, port, SOCK_STREAM, AF_INET, IPPROTO_TCP);
+  on_IO_request(IO_callback);
 
-  if (!server_socket) {
-    return INVALID_SOCKET;
-  }
+  if (on_req)
+    http_bind_listener(HTTP_EVENT_REQUEST, on_req);
 
-  http_bind_listener(HTTP_EVENT_REQUEST, on_request);
-
-  return server_socket;
+  return 1;
 }
 
 int http_server_listen
-(SOCKET server_socket, int max_connections) {
+(char* host, char* port, int max_connections) {
   on_socket_accept(_g_onconnopen);
   on_server_open(_g_onservon);
   on_server_close(_g_onservoff);
 
-  if (handle_connections(server_socket, max_connections, IO_callback)) {
-    return -1;
+  if (create_server(host, port, SOCK_STREAM, AF_INET, IPPROTO_TCP, max_connections)) {
+    return 0;
   }
 
-  return 0;
+  return 1;
 }

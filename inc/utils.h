@@ -6,6 +6,8 @@ char* str_find_char(const char* str, const char c);
 // returns pointer to last occurrence of char c in string str
 char* str_find_char_reversed(const char* str, const char c);
 
+void int_to_string(int value, char* const buffer, int buffer_size);
+
 // return 1 string are euqual, otherwise 0
 int str_is_equal(const char* str1, const char* str2);
 

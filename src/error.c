@@ -62,6 +62,12 @@ void error_last_print_message()
   case 10:
     fprintf(g_output_file, "send() call failed with code: %s\n", g_what);
     break;
+  case 11:
+    fprintf(g_output_file, "socket bind() call failed with code: %s\n", g_what);
+    break;
+  case 12:
+    fprintf(g_output_file, "ioctlsocket() call failed with code: %s\n", g_what);
+    break;
   default:
     fprintf(g_output_file, "Undefined error: %d", g_last_error);
     break;

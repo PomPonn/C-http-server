@@ -32,7 +32,6 @@ typedef struct MIME_record {
 /// @param callback callback function to bind. Must be of corresponding callback type.
 void http_bind_listener(HTTP_EVENT event, void* callback);
 
-SOCKET create_http_server
-(const char* const host, const char* const port, HTTP_REQUEST_CALLBACK on_request);
+int http_init_server(HTTP_REQUEST_CALLBACK on_request);
 
-int http_server_listen(SOCKET server_socket, int max_connections);
+int http_server_listen(char* host, char* port, int max_connections);

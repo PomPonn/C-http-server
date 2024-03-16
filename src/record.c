@@ -1,5 +1,4 @@
-
-#include "structs/record.h";
+#include "structs/record.h"
 
 #include "utils.h"
 
