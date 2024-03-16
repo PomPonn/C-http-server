@@ -2,6 +2,7 @@
 
 #include "base_server.h"
 #include "error.h"
+#include "utils.h"
 
 #include <WinSock2.h> // socket library
 
@@ -42,20 +43,18 @@ CB_RESULT IO_callback(SOCKET client_socket) {
     char* event_header_value = NULL;
 
     // check for events
-    if (http_get_header(req.content, "Upgrade", event_header_value)) {
+    if (_g_onupgrade && http_get_header(req.content, "Upgrade", event_header_value)) {
       // call upgrade callback
-      if (_g_onupgrade)
-        _g_onupgrade(&req, event_header_value, res);
-
+      _g_onupgrade(&req, event_header_value, &res);
       free(event_header_value);
     }
     else {
       // call request callback
       if (_g_onreq)
-        _g_onreq(&req, res);
+        _g_onreq(&req, &res);
     }
 
-    if (send(client_socket, res, strlen(res), 0) == SOCKET_ERROR) {
+    if (send(client_socket, res, str_length(res), 0) == SOCKET_ERROR) {
       error_set_last_with_code(8, WSAGetLastError());
     }
   }
@@ -80,7 +79,8 @@ void http_bind_listener(HTTP_EVENT event, void* callback)
   }
 }
 
-SOCKET create_http_server(const char* const host, const char* const port) {
+SOCKET create_http_server
+(const char* const host, const char* const port, HTTP_REQUEST_CALLBACK on_request) {
   if (!init_winsock()) {
     return INVALID_SOCKET;
   }
@@ -90,6 +90,8 @@ SOCKET create_http_server(const char* const host, const char* const port) {
   if (!server_socket) {
     return INVALID_SOCKET;
   }
+
+  http_bind_listener(HTTP_EVENT_REQUEST, on_request);
 
   return server_socket;
 }

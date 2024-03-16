@@ -25,8 +25,8 @@ typedef struct http_version {
 
 typedef struct http_request {
   req_method method;
-  http_version version;
   char variant[_VARIANTSIZE_];
+  http_version version;
   char url_path[_PATHSIZE_];
   char* content;
 } http_request;
@@ -34,15 +34,23 @@ typedef struct http_request {
 typedef struct http_header {
   char* name;
   char* value;
+  struct http_header* next;
 } http_header;
 
-/// @brief frees the header memory
-/// @param header pointer to the header
-void http_header_free(http_header* header);
+typedef struct http_header_list_item {
+  http_header* item;
+  struct http_header_list_item* next;
+} http_header_list_item;
 
 /// @brief frees allocated http response
 /// @param response pointer to http response
-void http_response_free(char* response);
+void http_response_free(http_response response);
+
+// returns headers linked list
+http_header_list_item* http_create_header_list
+(int list_size, http_header* init_list);
+
+void http_destroy_header_list(http_header_list_item* list);
 
 /// @brief looks for value of given http header name and sets it in header->value
 /// @param buffer buffer containg http headers
@@ -60,9 +68,9 @@ int http_get_header
 int http_is_value_in_header(const http_header* const header, char delim, char* value);
 
 /// @brief calculates total size of headers after converting them to string
-int _total_headers_size(const http_header* const headers, int h_count);
+int _total_headers_size(const http_header_list_item* headers, int h_count);
 
-/// @brief builds http request from specified parameters
+/// @brief builds http response from specified parameters
 /// @param http_variant http or https
 /// @param version http version
 /// @param status example of status: "200 OK" '<status code> <status info>'
@@ -71,11 +79,11 @@ int _total_headers_size(const http_header* const headers, int h_count);
 /// @param body pointer to message body
 /// @param response_size stores size of built response
 /// @returns pointer to built http response
-char* build_http_response(
+char* http_build_response(
   const char* const http_variant,
   http_version version,
   const char* const status,
-  const http_header* const headers,
+  const http_header_list_item* headers,
   int headers_count,
   char* const body,
   int* const response_size

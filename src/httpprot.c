@@ -9,18 +9,20 @@
 #define SMALL_BUFLEN 64
 
 // defines size of static elements in http response
-#define _RESP_FIXED_SIZE 6
+#define _RESP_FIXED_SIZE 7
 
 #define CRLF "\r\n"
 // convert ASCII character to integer
 #define char_to_int(c) (c) - 48
 
-void http_header_free(http_header* header) {
-  free(header->value);
-  header->value = NULL;
-}
+#define add_header_elem(elem, header) \
+elem = malloc(sizeof(http_header_list_item)); \
+elem->item = malloc(sizeof(http_header)); \
+*elem->item = header; \
+elem->next = NULL; \
 
-void http_response_free(char* response) {
+
+void http_response_free(http_response response) {
   free(response);
   response = NULL;
 }
@@ -45,7 +47,7 @@ int http_is_value_in_header(const http_header* const header, char delim, char* v
     strncpy_s(temp, SMALL_BUFLEN, pstart, len);
 
     // compare
-    if (strcmp(temp, value) == 0) {
+    if (str_is_equal(temp, value)) {
       return 1;
     }
     else {
@@ -86,7 +88,7 @@ int http_get_header
 
     strncpy_s(temp, SMALL_BUFLEN, line, len);
 
-    if (strcmp(temp, header_name) == 0) {
+    if (str_is_equal(temp, header_name)) {
       if (header_value) {
         // increase pointer so it points to the header value
         do {
@@ -110,29 +112,63 @@ int http_get_header
   return 0;
 }
 
-int _total_headers_size(const http_header* const headers, int h_count) {
+int _total_headers_size(const http_header_list_item* headers, int h_count) {
   int tsize = 0;
+  const http_header_list_item* ptr = headers;
 
-  for (int i = 0; i < h_count; i++) {
-    tsize += strlen(headers[i].name) + strlen(headers[i].value) + 4 /* '\r\n' and ': ' */;
+  while (ptr) {
+    tsize += str_length(ptr->item->name) + str_length(ptr->item->value) + 4 /* '\r\n' and ': ' */;
+
+    ptr = ptr->next;
   }
 
   return tsize;
 }
 
-char* build_http_response
+http_header_list_item* http_create_header_list
+(int list_size, http_header* init_list) {
+  if (list_size < 1) return NULL;
+
+
+  http_header_list_item* list;
+  add_header_elem(list, init_list[0]);
+
+  http_header_list_item* ptr = list;
+
+  for (int i = 1; i < list_size; i++) {
+    add_header_elem(ptr->next, init_list[i]);
+
+    ptr = ptr->next;
+  }
+
+  return list;
+}
+
+void http_destroy_header_list(http_header_list_item* list) {
+  http_header_list_item* ptr = list, * next;
+
+  while (ptr) {
+    free(ptr->item);
+    next = ptr->next;
+    free(ptr);
+
+    ptr = next;
+  }
+}
+
+char* http_build_response
 (
   const char* const http_variant,
   http_version version,
   const char* const status,
-  const http_header* const headers,
+  const http_header_list_item* headers,
   int h_count,
   char* const body,
   int* const response_size
 ) {
   int resp_size = _RESP_FIXED_SIZE +
-    strlen(http_variant) + strlen(status) +
-    _total_headers_size(headers, h_count) + strlen(body);
+    str_length(http_variant) + str_length(status) +
+    _total_headers_size(headers, h_count) + str_length(body);
 
   if (version.minor == 0) {
     resp_size += 1; // <major>
@@ -166,23 +202,28 @@ char* build_http_response
   // end line
   strcat_s(response, resp_size, CRLF);
 
-  // concat all headers to response
-  for (int i = 0; i < h_count; i++) {
+  const http_header_list_item* hptr = headers;
+
+  while (hptr) {
     // add header content
-    strcat_s(response, resp_size, headers[i].name);
+    strcat_s(response, resp_size, hptr->item->name);
     strcat_s(response, resp_size, ": ");
-    strcat_s(response, resp_size, headers[i].value);
+    strcat_s(response, resp_size, hptr->item->value);
     // end line
     strcat_s(response, resp_size, CRLF);
+
+    hptr = hptr->next;
   }
 
   // add empty line to indicate start of message body
   strcat_s(response, resp_size, CRLF);
 
   // add msg body
-  strcat_s(response, resp_size, body);
+  if (body)
+    strcat_s(response, resp_size, body);
 
-  *response_size = resp_size;
+  if (response_size)
+    *response_size = resp_size;
   return response;
 }
 
@@ -205,28 +246,28 @@ int resolve_http_request_line(char* const buffer, http_request* result) {
   strncpy_s(temp, SMALL_BUFLEN, buffer, len);
 
   // set request method
-  if (strcmp(temp, "GET") == 0) {
+  if (str_is_equal(temp, "GET")) {
     result->method = HTTP_GET;
   }
-  else if (strcmp(temp, "POST") == 0) {
+  else if (str_is_equal(temp, "POST")) {
     result->method = HTTP_POST;
   }
-  else if (strcmp(temp, "PUT") == 0) {
+  else if (str_is_equal(temp, "PUT")) {
     result->method = HTTP_PUT;
   }
-  else if (strcmp(temp, "HEAD") == 0) {
+  else if (str_is_equal(temp, "HEAD")) {
     result->method = HTTP_HEAD;
   }
-  else if (strcmp(temp, "CONNECT") == 0) {
+  else if (str_is_equal(temp, "CONNECT")) {
     result->method = HTTP_CONNECT;
   }
-  else if (strcmp(temp, "DELETE") == 0) {
+  else if (str_is_equal(temp, "DELETE")) {
     result->method = HTTP_DELETE;
   }
-  else if (strcmp(temp, "OPTIONS") == 0) {
+  else if (str_is_equal(temp, "OPTIONS")) {
     result->method = HTTP_OPTIONS;
   }
-  else if (strcmp(temp, "PATCH") == 0) {
+  else if (str_is_equal(temp, "PATCH")) {
     result->method = HTTP_PATCH;
   }
   else {
@@ -254,14 +295,14 @@ int resolve_http_request_line(char* const buffer, http_request* result) {
   char version_buffer[SMALL_BUFLEN];
 
   // copy version string
-  ptr++;
+  char* vptr = ptr + 1;
   int c = 0;
 
-  while (*ptr != ' ' && (*ptr != '\r' || *(ptr + 1) != '\n') && *ptr != '\0') {
-    version_buffer[c++] = *ptr++;
+  while (*vptr != ' ' && (*vptr != '\r' || *(vptr + 1) != '\n') && *vptr != '\0') {
+    version_buffer[c++] = *vptr++;
   }
 
-  if (*ptr == '\0')
+  if (*vptr == '\0')
     return -4;
 
   // copy variant

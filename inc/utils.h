@@ -6,6 +6,11 @@ char* str_find_char(const char* str, const char c);
 // returns pointer to last occurrence of char c in string str
 char* str_find_char_reversed(const char* str, const char c);
 
+// return 1 string are euqual, otherwise 0
+int str_is_equal(const char* str1, const char* str2);
+
+int str_length(const char* str);
+
 /// @brief extracts line from the string buffer
 /// @param strbuf the string buffer to extract line from
 /// @param linebuff contains extracted line (optional)
@@ -16,7 +21,7 @@ char* get_buffer_line(char* strbuf, char* linebuf, unsigned int linebuff_size);
 /// @brief read file in specified path in binary mode
 /// @param path path to the file
 /// @param content returns file content
-/// @return error code
+/// @return < 0 => error code; >= 0 => size of content
 int read_file(const char* const path, char** const content);
 
 /// @brief frees allocated resource

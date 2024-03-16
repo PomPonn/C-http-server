@@ -13,6 +13,11 @@ char* str_find_char_reversed(const char* str, const char c) {
   return strrchr(str, c);
 }
 
+// return length of string (0 if NULL is passed)
+int str_length(const char* str) {
+  return str ? strlen(str) : 0;
+}
+
 char* get_buffer_line(char* strbuf, char* linebuf, unsigned int linebuff_size) {
   if (!strbuf) return NULL;
 
@@ -37,6 +42,10 @@ char* get_buffer_line(char* strbuf, char* linebuf, unsigned int linebuff_size) {
   return end;
 }
 
+int str_is_equal(const char* str1, const char* str2) {
+  return strcmp(str1, str2) == 0 ? 1 : 0;
+}
+
 int read_file(const char* const path, char** const content) {
   // open file
   FILE* fp;
@@ -53,6 +62,8 @@ int read_file(const char* const path, char** const content) {
   *content = malloc(file_size);
 
   if (fread(*content, sizeof(char), file_size, fp) != file_size) {
+    free(*content);
+    *content = NULL;
     return -2;
   }
 
