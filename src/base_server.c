@@ -11,7 +11,7 @@
 #pragma comment(lib, "Ws2_32.lib")
 
 /* GLOBAL */
-int* connections;
+SOCKET* connections;
 // for _control_handler to access maximum number of connections
 int g_max_conns;
 BOOL g_quit = FALSE;
@@ -49,7 +49,7 @@ int handle_connections
   // init connections and let the first one be the server socket
   connections[0] = listen_socket;
   for (int i = 1; i <= max_connections; i++) {
-    connections[i] = -1;
+    connections[i] = INVALID_SOCKET;
   }
 
   if (g_serv_open_cb)
@@ -59,13 +59,16 @@ int handle_connections
   while (!g_quit) {
     // set fd_read_set before select call
     FD_ZERO(&fd_read_set);
-    for (int i = 0; i <= max_connections; i++) {
-      if (connections[i] >= 0)
+    FD_SET(listen_socket, &fd_read_set);
+    for (int i = 1; i <= max_connections; i++) {
+      if (connections[i] != INVALID_SOCKET) {
         FD_SET(connections[i], &fd_read_set);
+      }
     }
 
     // wait until select return
     ret_val = select(0, &fd_read_set, NULL, NULL, NULL);
+
     if (g_quit) {
       break;
     }
@@ -82,7 +85,7 @@ int handle_connections
         else {
           // add new client socket to the first free connections slot
           for (int i = 1; i <= max_connections; i++) {
-            if (connections[i] < 0) {
+            if (connections[i] == INVALID_SOCKET) {
               connections[i] = client_socket;
               if (g_sock_acc_cb)
                 g_sock_acc_cb(connections[i]);
@@ -97,7 +100,7 @@ int handle_connections
 
       // iterate connections in search of sockets with event
       for (int i = 1; i <= max_connections; i++) {
-        if (connections[i] > 0 && FD_ISSET(connections[i], &fd_read_set)) {
+        if (connections[i] != INVALID_SOCKET && FD_ISSET(connections[i], &fd_read_set)) {
 
           // run user defined callback function
           CB_RESULT res = CB_CLOSE_SOCKET;
@@ -109,7 +112,7 @@ int handle_connections
           case CB_CONTINUE:
             break;
           case CB_CLOSE_SOCKET:
-            connections[i] = -1; // invalidate connection
+            connections[i] = INVALID_SOCKET; // invalidate connection
             break;
           }
 
