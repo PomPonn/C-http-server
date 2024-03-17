@@ -40,7 +40,7 @@ void on_server_on() {
   printf("server listening on port: %s...\n\n", DEFAULT_PORT);
 }
 void on_server_off() {
-  printf("server stopped listening\n");
+  printf("\nserver stopped listening\n");
 }
 
 #endif
