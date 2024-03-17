@@ -12,7 +12,7 @@
 #define DEFAULT_HOST "localhost"
 #define DEFAULT_PORT "80"
 
-#define ROOT_PATH "C:/Users/gangs/OneDrive/Dokumenty/MyStuff/Projects/C_HTTP_server/"
+#define ROOT_PATH "C:/Users/gangs/OneDrive/Dokumenty/MyStuff/Projects/C_HTTP_server/example/public"
 
 record_str_t mime_types[] = {
   { "html", "text/html; charset=utf-8" },
@@ -54,6 +54,7 @@ void on_request(http_request* req, http_response* res) {
       headers = http_create_header_array(h_count,
         (http_header[]) {
           { "Content-Length", "0" },
+          { "Connection", "close" },
       });
     }
     else {
