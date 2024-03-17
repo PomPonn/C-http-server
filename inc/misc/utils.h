@@ -13,6 +13,9 @@ int str_is_equal(const char* str1, const char* str2);
 
 int str_length(const char* str);
 
+void str_concat
+(char* destination, unsigned int byte_size, const char* source);
+
 /// @brief extracts line from the string buffer
 /// @param strbuf the string buffer to extract line from
 /// @param linebuff contains extracted line (optional)

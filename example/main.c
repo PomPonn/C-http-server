@@ -1,6 +1,6 @@
 #include "server/http_server.h"
 
-#include "misc/url.h"
+#include "misc/path.h"
 #include "misc/utils.h"
 #include "misc/error.h"
 #include "structs/pair.h"
@@ -37,12 +37,11 @@ void on_request(http_request* req, http_response* res) {
   case HTTP_GET: {
     // concat paths
     char full_path[MAX_PATH_SIZE] = ROOT_PATH;
-    // use url_append here because it works fine in this case
-    url_append(full_path, MAX_PATH_SIZE, req->url_path);
+    path_join(full_path, MAX_PATH_SIZE, req->url_path);
 
     // if root is requested then append index.html
     if (str_is_equal(req->url_path, "/")) {
-      url_append(full_path, MAX_PATH_SIZE, "index.html");
+      path_join(full_path, MAX_PATH_SIZE, "index.html");
     }
 
     if ((resource_size = read_file(full_path, &resource_content)) < 0) {

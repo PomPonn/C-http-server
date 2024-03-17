@@ -16,4 +16,5 @@ ${SRC_DIR}/httpprot.c
 ${SRC_DIR}/url.c
 ${SRC_DIR}/error.c
 ${SRC_DIR}/pair.c
+${SRC_DIR}/path.c
 )

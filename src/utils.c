@@ -23,6 +23,10 @@ int str_length(const char* str) {
   return str ? strlen(str) : 0;
 }
 
+void str_concat(char* str1, unsigned int byte_size, const char* str2)
+{
+  strcat_s(str1, byte_size, str2);
+}
 char* get_buffer_line(char* strbuf, char* linebuf, unsigned int linebuff_size) {
   if (!strbuf) return NULL;
 
