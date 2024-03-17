@@ -204,11 +204,13 @@ BOOL WINAPI _control_handler(DWORD ctrl_type) {
   {
   case CTRL_C_EVENT:
   case CTRL_BREAK_EVENT:
+  case CTRL_LOGOFF_EVENT:
+  case CTRL_SHUTDOWN_EVENT:
   case CTRL_CLOSE_EVENT:
   {
     g_quit = TRUE;
-    for (int i = 0; i < g_max_conns; i++) {
-      if (connections[i] > 0) {
+    for (int i = 0; i <= g_max_conns; i++) {
+      if (connections[i] != INVALID_SOCKET) {
         closesocket(connections[i]);
       }
     }
