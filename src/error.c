@@ -20,7 +20,7 @@ void error_set_last(int error_code, const char* what)
 }
 
 void error_set_callback(ERROR_CALLBACK callback) {
-  err_cb = callback;
+  err_cb = (ERROR_CALLBACK)callback;
 }
 
 int error_get_last_code()
