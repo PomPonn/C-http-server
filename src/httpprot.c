@@ -115,20 +115,57 @@ int _total_headers_size(const http_header* headers, int h_count) {
   return tsize;
 }
 
-http_header* http_create_header_array
-(int arr_size, http_header* init_list) {
-  if (arr_size < 1 || !init_list) return NULL;
+int http_header_array_resize
+(http_header* header_array, int current_size, int new_size) {
+  if (!header_array || new_size <= current_size) return 0;
+
+  http_header* arr = malloc(sizeof(http_header) * new_size);
+
+  for (int i = 0; i < current_size; i++) {
+    arr[i] = header_array[i];
+  }
+
+  http_header_array_destroy(header_array);
+  header_array = arr;
+  return 1;
+}
+
+http_header* http_header_array_create
+(int arr_size, int init_list_size, http_header* init_list) {
+
+  if (arr_size < 1 || init_list_size > arr_size) return NULL;
 
   http_header* result = malloc(sizeof(http_header) * arr_size);
 
-  for (int i = 0; i < arr_size; i++) {
+  for (int i = 0; i < init_list_size; i++) {
     result[i] = init_list[i];
   }
 
   return result;
 }
 
-void http_destroy_header_array(http_header* array) {
+int http_header_array_push
+(
+  int header_array_size, int header_array_length, http_header* header_array,
+  int headers_size, http_header* headers
+)
+{
+  if (!header_array || !headers) return -1;
+
+  int total_new_length = header_array_length + headers_size;
+
+  if (total_new_length > header_array_size) {
+    http_header_array_resize(header_array, header_array_size, total_new_length);
+  }
+
+  for (int i = header_array_length; i < total_new_length; i++) {
+    header_array[i] = headers[i];
+  }
+
+  return total_new_length;
+}
+
+void http_header_array_destroy(http_header* array) {
   free(array);
   array = NULL;
 }

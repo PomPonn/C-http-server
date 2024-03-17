@@ -25,12 +25,33 @@ pair_str_t mime_types[] = {
   { "jpeg", "image/jpeg" },
 };
 
+#ifdef _DEBUG
+
+void on_socket_open(SOCKET socket) {
+  printf("connection opened on socket: %d\n", (int)socket);
+}
+void on_socket_close(SOCKET socket) {
+  printf("connection closed on socket: %d\n", (int)socket);
+}
+void on_server_on() {
+  printf("server listening on port: %s...\n\n", DEFAULT_PORT);
+}
+void on_server_off() {
+  printf("server stopped listening\n");
+}
+
+#endif
+
+int main();
+
 void on_request(http_request* req, http_response* res) {
   http_header* headers = NULL;
+  int h_count = 0, h_size = 2;
   char* status = NULL;
-  int h_count = 0;
   char* resource_content = NULL;
   int resource_size = 0;
+
+  headers = http_header_array_create(2, 0, NULL);
 
   switch (req->method)
   {
@@ -48,8 +69,7 @@ void on_request(http_request* req, http_response* res) {
       status = "404 Not Found";
 
       // add item to headers list
-      h_count = 1;
-      headers = http_create_header_array(h_count,
+      h_count = http_header_array_push(h_size, h_count, headers, 2,
         (http_header[]) {
           { "Content-Length", "0" },
           { "Connection", "close" },
@@ -71,8 +91,7 @@ void on_request(http_request* req, http_response* res) {
       status = "200 OK";
 
       // add headers
-      h_count = 2;
-      headers = http_create_header_array(h_count,
+      h_count = http_header_array_push(h_size, h_count, headers, 2,
         (http_header[]) {
           { "Content-Type", mime_type },
           { "Content-Length", content_size_str },
@@ -82,10 +101,9 @@ void on_request(http_request* req, http_response* res) {
     break;
   }
   default: {
-    h_count = 1;
-    headers = http_create_header_array(1,
+    h_count = http_header_array_push(h_size, h_count, headers, 1,
       (http_header[]) {
-      "Content-Length", "0"
+        { "Content-Length", "0" },
     });
 
     if (req->method == HTTP_HEAD)
@@ -108,31 +126,21 @@ void on_request(http_request* req, http_response* res) {
   );
 
   if (headers)
-    http_destroy_header_array(headers);
+    http_header_array_destroy(headers);
   if (resource_content)
     free_content(resource_content);
 }
 
-void on_socket_open(SOCKET socket) {
-  printf("connection opened on socket: %d\n", (int)socket);
-}
-void on_socket_close(SOCKET socket) {
-  printf("connection closed on socket: %d\n", (int)socket);
-}
-void on_server_on() {
-  printf("server listening on port: %s...\n\n", DEFAULT_PORT);
-}
-void on_server_off() {
-  printf("server stopped listening\n");
-}
-
-
 int main() {
+
+#ifdef _DEBUG
 
   http_bind_listener(HTTP_EVENT_CONNECTION_OPEN, on_socket_open);
   http_bind_listener(HTTP_EVENT_CONNECTION_CLOSE, on_socket_close);
   http_bind_listener(HTTP_EVENT_SERVER_ON, on_server_on);
   http_bind_listener(HTTP_EVENT_SERVER_OFF, on_server_off);
+
+#endif
 
   SOCKET server_socket = http_create_server(DEFAULT_HOST, DEFAULT_PORT);
 

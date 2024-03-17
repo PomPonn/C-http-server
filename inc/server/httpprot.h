@@ -40,12 +40,28 @@ typedef struct http_header {
 /// @param response pointer to http response
 void http_response_free(http_response response);
 
+int http_header_array_resize(http_header* header_array,
+  int current_size, int new_size);
+
 // [optional] creates dynamic header array (use when you need variable length header array)
 // init_list param must be of array_size
-http_header* http_create_header_array
-(int array_size, http_header* init_list);
+http_header* http_header_array_create
+(int array_size, int init_list_size, http_header* init_list);
 
-void http_destroy_header_array(http_header* array);
+/// @brief push new item to exisiting header array
+/// @param header_array header array to work with
+/// @param header_array_size allocated size of header array
+/// @param header_array_length true length of header array
+/// @param headers_size length of headers to push
+/// @param headers new headers to push
+/// @return new array length
+int http_header_array_push
+(
+  int header_array_size, int header_array_length, http_header* header_array,
+  int headers_size, http_header* headers
+);
+
+void http_header_array_destroy(http_header* array);
 
 /// @brief looks for value of given http header name and sets it in header->value
 /// @param buffer buffer containg http headers
