@@ -15,7 +15,6 @@ HTTP_CONNECTION_CLOSE_CALLBACK _g_onconnclose = NULL;
 HTTP_CONNECTION_OPEN_CALLBACK _g_onconnopen = NULL;
 HTTP_SERVER_OFF_CALLBACK _g_onservoff = NULL;
 HTTP_SERVER_ON_CALLBACK _g_onservon = NULL;
-HTTP_UPGRADE_CALLBACK _g_onupgrade = NULL;
 
 CB_RESULT IO_callback(SOCKET client_socket) {
   char buffer[CONNECTION_RECIEVE_BUFFER_SIZE];
@@ -44,17 +43,10 @@ CB_RESULT IO_callback(SOCKET client_socket) {
 
     char* event_header_value = NULL;
 
-    // check for events
-    if (_g_onupgrade && http_get_header(req.content, "Upgrade", event_header_value)) {
-      // call upgrade callback
-      _g_onupgrade(&req, event_header_value, &res);
-      free(event_header_value);
-    }
-    else {
-      // call request callback
-      if (_g_onreq)
-        _g_onreq(&req, &res);
-    }
+    // call request callback
+    if (_g_onreq)
+      _g_onreq(&req, &res);
+
 
     if (send(client_socket, res, str_length(res), 0) == SOCKET_ERROR) {
       error_set_last_with_code(8, WSAGetLastError());
@@ -82,9 +74,6 @@ void http_bind_listener(HTTP_EVENT event, void* callback)
     break;
   case HTTP_EVENT_SERVER_OFF:
     _g_onservoff = (HTTP_SERVER_OFF_CALLBACK)callback;
-    break;
-  case HTTP_EVENT_UPGRADE:
-    _g_onupgrade = (HTTP_UPGRADE_CALLBACK)callback;
     break;
   default: break;
   }

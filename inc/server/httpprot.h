@@ -28,7 +28,7 @@ typedef struct http_request {
   char variant[_VARIANTSIZE_];
   http_version version;
   char url_path[_PATHSIZE_];
-  char* content;
+  char* raw_content;
 } http_request;
 
 typedef struct http_header {

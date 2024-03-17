@@ -301,7 +301,7 @@ int resolve_http_request_line(char* const buffer, http_request* result) {
     return -4;
 
   // set pointer to http request content
-  if (!(result->content = get_buffer_line(ptr, NULL, 0))) {
+  if (!(result->raw_content = get_buffer_line(ptr, NULL, 0))) {
     return -5;
   }
 

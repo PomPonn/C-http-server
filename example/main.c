@@ -87,7 +87,11 @@ void on_request(http_request* req, http_response* res) {
       (http_header[]) {
       "Content-Length", "0"
     });
-    status = "404 Not Found";
+
+    if (req->method == HTTP_HEAD)
+      status = "500 Internal Server Error";
+    else
+      status = "501 Not Implemented";
 
     break;
   }
