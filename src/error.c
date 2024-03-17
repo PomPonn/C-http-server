@@ -1,8 +1,9 @@
 #include "misc/error.h"
 
-int g_last_error = -1;
+int g_last_error = 0;
 const char* g_what = NULL;
 FILE* g_output_file;
+ERROR_CALLBACK err_cb = NULL;
 
 void error_set_output_file(FILE* output_file)
 {
@@ -13,6 +14,13 @@ void error_set_last(int error_code, const char* what)
 {
   g_last_error = error_code;
   g_what = what;
+
+  if (err_cb)
+    err_cb();
+}
+
+void error_set_callback(ERROR_CALLBACK callback) {
+  err_cb = callback;
 }
 
 int error_get_last_code()

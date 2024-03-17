@@ -3,11 +3,13 @@
 #include "httpprot.h"
 
 typedef int HTTP_EVENT;
+
 #define HTTP_EVENT_REQUEST 1
 #define HTTP_EVENT_CONNECTION_OPEN 2
 #define HTTP_EVENT_CONNECTION_CLOSE 3
 #define HTTP_EVENT_SERVER_ON 4
 #define HTTP_EVENT_SERVER_OFF 5
+
 // forward typedefs
 typedef int CB_RESULT;
 typedef unsigned int SOCKET;

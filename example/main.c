@@ -27,6 +27,9 @@ pair_str_t mime_types[] = {
 
 #ifdef _DEBUG
 
+void on_error() {
+  error_last_print_message();
+}
 void on_socket_open(SOCKET socket) {
   printf("connection opened on socket: %d\n", (int)socket);
 }
@@ -135,6 +138,7 @@ int main() {
 
 #ifdef _DEBUG
 
+  error_set_callback(on_error);
   http_bind_listener(HTTP_EVENT_CONNECTION_OPEN, on_socket_open);
   http_bind_listener(HTTP_EVENT_CONNECTION_CLOSE, on_socket_close);
   http_bind_listener(HTTP_EVENT_SERVER_ON, on_server_on);
