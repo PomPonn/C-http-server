@@ -3,8 +3,7 @@
 #include "misc/url.h"
 #include "misc/utils.h"
 #include "misc/error.h"
-#include "structs/record.h"
-
+#include "structs/pair.h"
 
 #define MAX_PATH_SIZE 256
 #define MAX_CONTENT_SIZE_STRLEN 64
@@ -14,7 +13,7 @@
 
 #define ROOT_PATH "C:/Users/gangs/OneDrive/Dokumenty/MyStuff/Projects/C_HTTP_server/example/public"
 
-record_str_t mime_types[] = {
+pair_str_t mime_types[] = {
   { "html", "text/html; charset=utf-8" },
   { "htm", "text/html" },
   { "css", "text/css" },
@@ -64,7 +63,7 @@ void on_request(http_request* req, http_response* res) {
 
       // get mime type
       char* mime_type =
-        records_str_get_value(mime_types, sizeof(mime_types) / sizeof(record_str_t), extension);
+        pairs_str_get_value(mime_types, sizeof(mime_types) / sizeof(pair_str_t), extension);
 
       // convert resource_size to string
       char content_size_str[MAX_CONTENT_SIZE_STRLEN];
