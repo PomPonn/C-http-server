@@ -11,12 +11,12 @@
 // inform compiler to use winsock library
 #pragma comment(lib, "Ws2_32.lib")
 
-/* GLOBAL */
 SOCKET* connections;
 // for _control_handler to access maximum number of connections
 int g_max_conns;
 BOOL g_quit = FALSE;
 
+// global callbacks
 IO_CALLBACK g_io_cb = NULL;
 SOCK_ACCEPT_CALLBACK g_sock_acc_cb = NULL;
 SERVER_CLOSE_CALLBACK g_serv_close_cb = NULL;
@@ -24,71 +24,15 @@ SERVER_OPEN_CALLBACK g_serv_open_cb = NULL;
 
 BOOL WINAPI _control_handler(DWORD ctrl_type);
 
-int create_server
-(const char* host, const char* port, int server_socket_type, int address_family, int protocol, int max_connections)
+int start_listening(SOCKET server_socket, int max_connections)
 {
-  if (!port || max_connections < 1) {
+  if (server_socket == INVALID_SOCKET || max_connections < 1) {
     error_set_last(1, "create_server");
     WSACleanup();
     return -1;
   }
-  g_max_conns = max_connections;
 
-  //
-  // Create server socket
-  //
-  SOCKET server_socket = INVALID_SOCKET;
-  struct addrinfo hints, * result = NULL;
   char temp[8];
-  u_long io_mode = 1;
-
-  // set hints struct
-  ZeroMemory(&hints, sizeof(hints));
-  hints.ai_family = address_family;
-  hints.ai_protocol = protocol;
-  hints.ai_socktype = server_socket_type;
-  hints.ai_flags = AI_PASSIVE;
-
-  int retval = getaddrinfo(host, port, &hints, &result);
-
-  if (retval || !result) {
-    error_set_last_with_code(5, WSAGetLastError());
-    WSACleanup();
-    return -1;
-  }
-
-  // Create server socket
-  server_socket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
-  if (server_socket == INVALID_SOCKET)
-  {
-    error_set_last_with_code(6, WSAGetLastError());
-    freeaddrinfo(result);
-    WSACleanup();
-    return -1;
-  }
-
-  // Bind the socket
-  retval = bind(server_socket, result->ai_addr, (int)result->ai_addrlen);
-  if (retval == SOCKET_ERROR)
-  {
-    error_set_last_with_code(11, WSAGetLastError());
-    freeaddrinfo(result);
-    closesocket(server_socket);
-    WSACleanup();
-    return -1;
-  }
-
-  freeaddrinfo(result);
-
-  // Make the socket non-blocking
-  retval = ioctlsocket(server_socket, FIONBIO, &io_mode);
-  if (retval == SOCKET_ERROR)
-  {
-    error_set_last_with_code(12, WSAGetLastError());
-    closesocket(server_socket);
-    WSACleanup();
-    return -1;
-  }
 
   // listen for connections
   if (listen(server_socket, SOMAXCONN) == SOCKET_ERROR) {
@@ -98,15 +42,12 @@ int create_server
     return -1;
   }
 
+  g_max_conns = max_connections;
   // set control handler to make cleanup after server shutdown
   SetConsoleCtrlHandler(_control_handler, TRUE);
 
-  //
-  // Start connections loop
-  //
   fd_set fd_read_set;
   int ret_val = 0;
-  g_max_conns = max_connections;
 
   // allocate memory for client sockets (+1 for server socket)
   connections = MemAlloc(0, sizeof(SOCKET) * (max_connections + 1));
@@ -120,7 +61,9 @@ int create_server
   if (g_serv_open_cb)
     g_serv_open_cb();
 
-  // start handling connections
+  //
+  // Start connections loop
+  //
   while (!g_quit) {
     // set fd_read_set before select call
     FD_ZERO(&fd_read_set);
@@ -194,6 +137,66 @@ int create_server
   } // while (TRUE)
 
   return 0;
+}
+
+
+SOCKET create_server_socket
+(const char* host, const char* port, int server_socket_type, int protocol) {
+
+  SOCKET server_socket = INVALID_SOCKET;
+  struct addrinfo hints, * result = NULL;
+  u_long io_mode = 1;
+  char temp[8];
+
+  // set hints struct
+  ZeroMemory(&hints, sizeof(hints));
+  hints.ai_family = AF_UNSPEC;
+  hints.ai_protocol = protocol;
+  hints.ai_socktype = server_socket_type;
+  hints.ai_flags = AI_PASSIVE;
+
+  int retval = getaddrinfo(host, port, &hints, &result);
+
+  if (retval || !result) {
+    error_set_last_with_code(5, WSAGetLastError());
+    WSACleanup();
+    return INVALID_SOCKET;
+  }
+
+  // Create server socket
+  server_socket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
+  if (server_socket == INVALID_SOCKET)
+  {
+    error_set_last_with_code(6, WSAGetLastError());
+    freeaddrinfo(result);
+    WSACleanup();
+    return INVALID_SOCKET;
+  }
+
+  // Bind the socket
+  retval = bind(server_socket, result->ai_addr, (int)result->ai_addrlen);
+  if (retval == SOCKET_ERROR)
+  {
+    error_set_last_with_code(11, WSAGetLastError());
+    freeaddrinfo(result);
+    closesocket(server_socket);
+    WSACleanup();
+    return INVALID_SOCKET;
+  }
+
+  freeaddrinfo(result);
+
+  // Make the socket non-blocking
+  retval = ioctlsocket(server_socket, FIONBIO, &io_mode);
+  if (retval == SOCKET_ERROR)
+  {
+    error_set_last_with_code(12, WSAGetLastError());
+    closesocket(server_socket);
+    WSACleanup();
+    return INVALID_SOCKET;
+  }
+
+  return server_socket;
 }
 
 BOOL WINAPI _control_handler(DWORD ctrl_type) {

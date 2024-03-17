@@ -33,8 +33,6 @@ void on_request(http_request* req, http_response* res) {
   char* resource_content = NULL;
   int resource_size = 0;
 
-  printf("IO operation\n");
-
   switch (req->method)
   {
   case HTTP_GET: {
@@ -112,7 +110,6 @@ void on_request(http_request* req, http_response* res) {
     free_content(resource_content);
 }
 
-
 void on_socket_open(SOCKET socket) {
   printf("connection opened on socket: %d\n", (int)socket);
 }
@@ -134,11 +131,9 @@ int main() {
   http_bind_listener(HTTP_EVENT_SERVER_ON, on_server_on);
   http_bind_listener(HTTP_EVENT_SERVER_OFF, on_server_off);
 
-  if (!http_init_server(on_request)) {
-    error_last_print_message();
-  }
+  SOCKET server_socket = http_create_server(DEFAULT_HOST, DEFAULT_PORT);
 
-  if (!http_server_listen(DEFAULT_HOST, DEFAULT_PORT, 100)) {
+  if (!http_server_listen(server_socket, 1024, on_request)) {
     error_last_print_message();
   }
 

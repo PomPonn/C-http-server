@@ -22,16 +22,13 @@ typedef void (*HTTP_SERVER_OFF_CALLBACK)(void);
 typedef void (*HTTP_UPGRADE_CALLBACK)
 (http_request* req, char* upgrade_header_value, http_response* res);
 
-typedef struct MIME_record {
-  char* extension;
-  char* type;
-} MIME_record;
-
 /// @brief bind listener to specified event
 /// @param event available events: "request", "connection close", "connection open"
 /// @param callback callback function to bind. Must be of corresponding callback type.
 void http_bind_listener(HTTP_EVENT event, void* callback);
 
-int http_init_server(HTTP_REQUEST_CALLBACK on_request);
+SOCKET http_create_server
+(const char* host, const char* port);
 
-int http_server_listen(const char* host, const char* port, int max_connections);
+int http_server_listen
+(SOCKET server_socket, int max_connections, HTTP_REQUEST_CALLBACK on_request);
