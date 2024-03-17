@@ -1,6 +1,6 @@
 #include "structs/record.h"
 
-#include "utils.h"
+#include "misc/utils.h"
 
 char* records_str_get_value(record_str_t* records, int records_count, const char* key) {
   for (int i = 0; i < records_count; i++) {

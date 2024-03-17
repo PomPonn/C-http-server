@@ -1,8 +1,8 @@
-#include "http_server.h"
+#include "server/http_server.h"
 
-#include "base_server.h"
-#include "error.h"
-#include "utils.h"
+#include "server/base_server.h"
+#include "misc/error.h"
+#include "misc/utils.h"
 
 #include <WinSock2.h> // socket library
 

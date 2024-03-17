@@ -1,8 +1,8 @@
-#include "http_server.h"
+#include "server/http_server.h"
 
-#include "url.h"
-#include "utils.h"
-#include "error.h"
+#include "misc/url.h"
+#include "misc/utils.h"
+#include "misc/error.h"
 #include "structs/record.h"
 
 

@@ -22,7 +22,7 @@ void free_url_parts(url_parts* url);
 /// @param string_to_append
 void url_append(char* const url, int max_url_size, const char* const string_to_append);
 
-/// @brief parses specified url
+/// @brief parses specified url [UNFINISHED]
 /// @param url url to parse
 /// @param parsed_url struct containing parsed url elements
 void url_parse(char* const url, url_parts* const parsed_url);

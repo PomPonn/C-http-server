@@ -1,6 +1,6 @@
-#include "httpprot.h"
+#include "server/httpprot.h"
 
-#include "utils.h"
+#include "misc/utils.h"
 
 #include <stdlib.h>
 #include <string.h>

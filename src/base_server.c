@@ -1,6 +1,6 @@
-#include "base_server.h"
+#include "server/base_server.h"
 
-#include "error.h"
+#include "misc/error.h"
 
 #define WINDOWS_LEAN_AND_MEAN
 #define FD_SETSIZE 1024
