@@ -101,37 +101,23 @@ void on_request(http_request* req, http_response* res) {
       });
     }
 
+    *res = http_build_response(
+      req->variant,
+      req->version,
+      status,
+      headers,
+      h_count,
+      resource_content,
+      &resource_size
+    );
+
+    if (headers)
+      http_header_array_destroy(headers);
+    if (resource_content)
+      free_content(resource_content);
     break;
   }
-  default: {
-    h_count = http_header_array_push(h_size, h_count, headers, 1,
-      (http_header[]) {
-        { "Content-Length", "0" },
-    });
-
-    if (req->method == HTTP_HEAD)
-      status = "500 Internal Server Error";
-    else
-      status = "501 Not Implemented";
-
-    break;
   }
-  }
-
-  *res = http_build_response(
-    req->variant,
-    req->version,
-    status,
-    headers,
-    h_count,
-    resource_content,
-    &resource_size
-  );
-
-  if (headers)
-    http_header_array_destroy(headers);
-  if (resource_content)
-    free_content(resource_content);
 }
 
 int main() {

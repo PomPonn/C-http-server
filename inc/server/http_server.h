@@ -1,6 +1,7 @@
 #pragma once
 
 #include "httpprot.h"
+#include "misc/utils.h"
 
 typedef int HTTP_EVENT;
 

@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.8.0)
 
 project(C_HTTP_server VERSION 0.2.0 LANGUAGES C)
 
-add_executable(C_HTTP_server example/main.c)
+add_executable(C_HTTP_server example/basic.c)
+#add_executable(C_HTTP_server example/min.c)
 
 set(SRC_DIR ${CMAKE_HOME_DIRECTORY}/src)
 

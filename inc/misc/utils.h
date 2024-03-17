@@ -13,6 +13,8 @@ int str_is_equal(const char* str1, const char* str2);
 
 int str_length(const char* str);
 
+int str_compare(const char* str1, const char* str2);
+
 void str_concat
 (char* destination, unsigned int byte_size, const char* source);
 

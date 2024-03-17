@@ -23,6 +23,11 @@ int str_length(const char* str) {
   return str ? strlen(str) : 0;
 }
 
+int str_compare(const char* str1, const char* str2)
+{
+  return strcmp(str1, str2);
+}
+
 void str_concat(char* str1, unsigned int byte_size, const char* str2)
 {
   strcat_s(str1, byte_size, str2);
