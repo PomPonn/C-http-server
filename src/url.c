@@ -16,6 +16,7 @@ void url_append(char* const url, int max_url_size, const char* const string_to_a
     *query_sign = '\0';
   }
 
+  // don't double slashes
   if (url[strlen(url) - 1] == '/' && string_to_append[0] == '/') {
     strcat_s(url, max_url_size, string_to_append + 1);
   }
@@ -23,6 +24,8 @@ void url_append(char* const url, int max_url_size, const char* const string_to_a
     strcat_s(url, max_url_size, string_to_append);
   }
 }
+
+// ............
 
 void url_parse(char* const url, url_parts* const parsed_url) {
   char* ptr = url, * ptr2 = url;

@@ -1,6 +1,6 @@
 #pragma once
 
-// HTTP REQUEST METHODS
+// http request methods
 #define HTTP_GET 1
 #define HTTP_POST 2
 #define HTTP_PUT 3
@@ -10,13 +10,14 @@
 #define HTTP_OPTIONS 7
 #define HTTP_PATCH 8
 
-// user might redefine these macros
+// redefine these macros as needed
 #define _PATHSIZE_ 256
 #define _HEADERLINESIZE_ 512
 #define _VARIANTSIZE_ 64
 
 typedef int req_method;
 typedef char* http_response;
+
 
 typedef struct http_version {
   short major;
@@ -40,11 +41,19 @@ typedef struct http_header {
 /// @param response pointer to http response
 void http_response_free(http_response response);
 
+/// @brief allocates more space for given header array
+/// @param header_array pointer to header array
+/// @param current_size current size of the array
+/// @param new_size new size of the array
+/// @return 0 on fail, 1 on success
 int http_header_array_resize(http_header* header_array,
   int current_size, int new_size);
 
-// [optional] creates dynamic header array (use when you need variable length header array)
-// init_list param must be of array_size
+/// @brief creates new dynamic header array
+/// @param array_size size of new array
+/// @param init_list_size size of initializer list
+/// @param init_list pointer to initializer list
+/// @returns allocated dynamic header array
 http_header* http_header_array_create
 (int array_size, int init_list_size, http_header* init_list);
 
@@ -55,18 +64,20 @@ http_header* http_header_array_create
 /// @param headers_size length of headers to push
 /// @param headers new headers to push
 /// @return new array length
-int http_header_array_push
-(
+int http_header_array_push(
   int header_array_size, int header_array_length, http_header* header_array,
   int headers_size, http_header* headers
 );
 
+/// @brief destroy header array
+/// @param array pointer to dynamic header array
 void http_header_array_destroy(http_header* array);
 
-/// @brief looks for value of given http header name and sets it in header->value
+/// @brief searches buffer for a given header
 /// @param buffer buffer containg http headers
 /// @param header_name defines name of the header to search for
-/// @param header_value contains allocated found value (if found, header should be freed with http_header_free)
+/// @param header_value contains found header value allocated on heap
+///        (if found, header should be freed with http_header_free)
 /// @return 1 if found, 0 if not
 int http_get_header
 (char* const buffer, const char* const header_name, char* const header_value);
@@ -90,7 +101,7 @@ int _total_headers_size(const http_header* headers, int h_count);
 /// @param body pointer to message body
 /// @param response_size stores size of built response
 /// @returns pointer to built http response
-char* http_build_response(
+http_response http_build_response(
   const char* const http_variant,
   http_version version,
   const char* const status,
@@ -103,10 +114,10 @@ char* http_build_response(
 /// @brief resolves http request line in specified buffer
 /// @param line_buffer buffer containing request
 /// @param result resolved http request line
-/// @return error code -> 0 if successful
+/// @return 0 if successful, nonzero otherwise
 int resolve_http_request_line(char* const buffer, http_request* result);
 
-/// @brief extracts file extension from given file url_path
-/// @param filepath url_path of the file
+/// @brief extracts file extension from given file
+/// @param filepath path of the file
 /// @param extension file extension of filepath in string format
 void get_file_extension(const char* const filepath, char* const extension);

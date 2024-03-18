@@ -10,6 +10,7 @@ int path_join(char* const origin, int origin_max_length, const char* string)
     return 0;
   }
 
+  // make sure to not double slashes
   if (origin[origin_len - 1] == '/' && string[0] == '/') {
     str_concat(origin, origin_max_length, string + 1);
   }

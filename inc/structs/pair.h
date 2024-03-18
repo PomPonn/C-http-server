@@ -5,5 +5,8 @@ typedef struct pair_str {
   char* value;
 } pair_str_t;
 
-// looks for a key in set of pairs and returns its value (NULL if not found)
+/// @brief returns value of given key in specified pairs array
+/// @param pairs pointer to pairs array
+/// @param pairs_count length of pairs array
+/// @param key key to search for
 char* pairs_str_get_value(pair_str_t* pairs, int pairs_count, const char* key);

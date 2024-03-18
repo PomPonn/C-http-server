@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8.0)
+cmake_minimum_required(VERSION 3.28.0)
 
 project(C_HTTP_server VERSION 0.2.0 LANGUAGES C)
 

@@ -8,6 +8,5 @@ char* pairs_str_get_value(pair_str_t* pairs, int pairs_count, const char* key) {
       return pairs[i].value;
     }
   }
-
   return (void*)0;
 }

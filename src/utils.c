@@ -1,9 +1,9 @@
 #include "misc/utils.h"
 
-#include <Windows.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <Windows.h>
 
 char* str_find_char(const char* str, const char c) {
   return strchr(str, c);
@@ -13,23 +13,19 @@ char* str_find_char_reversed(const char* str, const char c) {
   return strrchr(str, c);
 }
 
-void int_to_string(int value, char* const buffer, int buffer_size)
-{
+void int_to_string(int value, char* const buffer, int buffer_size) {
   _itoa_s(value, buffer, buffer_size, 10);
 }
 
-// return length of string (0 if NULL is passed)
 int str_length(const char* str) {
   return str ? strlen(str) : 0;
 }
 
-int str_compare(const char* str1, const char* str2)
-{
+int str_compare(const char* str1, const char* str2) {
   return strcmp(str1, str2);
 }
 
-void str_concat(char* str1, unsigned int byte_size, const char* str2)
-{
+void str_concat(char* str1, unsigned int byte_size, const char* str2) {
   strcat_s(str1, byte_size, str2);
 }
 char* get_buffer_line(char* strbuf, char* linebuf, unsigned int linebuff_size) {
@@ -47,6 +43,7 @@ char* get_buffer_line(char* strbuf, char* linebuf, unsigned int linebuff_size) {
   if (!line_size || (line_size >= linebuff_size && linebuf)) return NULL;
 
   if (linebuf) {
+    // copy line
     strncpy_s(linebuf, linebuff_size, strbuf, line_size);
     linebuf[line_size] = '\0';
   }
@@ -90,12 +87,10 @@ void free_content(char* content) {
   content = NULL;
 }
 
-BOOL get_working_directory(char* buffer, int buffer_size)
-{
+int get_working_directory(char* buffer, int buffer_size) {
   if (!GetCurrentDirectory(buffer_size, buffer)) {
     return 0;
   }
-
   return 1;
 }
 

@@ -68,11 +68,11 @@ int http_get_header
   while (lptr = get_buffer_line(lptr, line, _HEADERLINESIZE_)) {
     if (!(ptr = str_find_char(line, ':'))) { // find end of header name
       // if there is no header name in the line, it means that message body is next
-      // so the header isnt found
+      // so the header isn't found
       break;
     }
 
-    // header name length
+    // calc header name length
     len = ptr - line;
 
     if (len >= SMALL_BUFLEN) {
@@ -83,7 +83,7 @@ int http_get_header
 
     if (str_is_equal(temp, header_name)) {
       if (header_value) {
-        // increase pointer so it points to the header value
+        // increase pointer so it points to the header value (not spaces)
         do {
           ptr++;
         } while (*ptr == ' ');
@@ -132,7 +132,6 @@ int http_header_array_resize
 
 http_header* http_header_array_create
 (int arr_size, int init_list_size, http_header* init_list) {
-
   if (arr_size < 1 || init_list_size > arr_size) return NULL;
 
   http_header* result = malloc(sizeof(http_header) * arr_size);
@@ -144,13 +143,11 @@ http_header* http_header_array_create
   return result;
 }
 
-int http_header_array_push
-(
+int http_header_array_push(
   int header_array_size, int header_array_length, http_header* header_array,
   int headers_size, http_header* headers
-)
-{
-  if (!header_array || !headers) return -1;
+) {
+  if (!header_array || !headers || header_array_length > header_array_size || headers_size < 1) return -1;
 
   int total_new_length = header_array_length + headers_size;
 
@@ -159,7 +156,7 @@ int http_header_array_push
   }
 
   for (int i = header_array_length; i < total_new_length; i++) {
-    header_array[i] = headers[i];
+    header_array[i] = headers[i - header_array_length];
   }
 
   return total_new_length;
@@ -170,8 +167,7 @@ void http_header_array_destroy(http_header* array) {
   array = NULL;
 }
 
-char* http_build_response
-(
+http_response http_build_response(
   const char* const http_variant,
   http_version version,
   const char* const status,
@@ -236,6 +232,7 @@ char* http_build_response
 
   if (response_size)
     *response_size = resp_size;
+
   return response;
 }
 
@@ -254,7 +251,7 @@ int resolve_http_request_line(char* const buffer, http_request* result) {
   if (len >= SMALL_BUFLEN)
     return -2;
 
-  // copy string to next space to the buffer
+  // copy req method string to the temp buffer
   strncpy_s(temp, SMALL_BUFLEN, buffer, len);
 
   // set request method
@@ -296,7 +293,7 @@ int resolve_http_request_line(char* const buffer, http_request* result) {
   if (len >= _PATHSIZE_)
     return -3;
 
-  // copy string to next space to the resource buffer
+  // copy url string to the url_path container
   strncpy_s(result->url_path, _PATHSIZE_, ptr, len);
 
   // find next slash

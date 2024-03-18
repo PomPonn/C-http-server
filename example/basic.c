@@ -4,7 +4,6 @@
 
 #include "misc/path.h"
 #include "misc/utils.h"
-#include "misc/error.h"
 #include "structs/pair.h"
 
 #define MAX_PATH_SIZE 256
@@ -115,6 +114,7 @@ void on_request(http_request* req, http_response* res) {
 
     if (headers)
       http_header_array_destroy(headers);
+
     if (resource_content)
       free_content(resource_content);
     break;
@@ -136,11 +136,7 @@ int main() {
 
   SOCKET server_socket = http_create_server(DEFAULT_HOST, DEFAULT_PORT);
 
-  if (!http_server_listen(server_socket, 1024, on_request)) {
-    error_last_print_message();
-  }
-
-  return 0;
+  return http_server_listen(server_socket, 1024, on_request);
 }
 
 #endif

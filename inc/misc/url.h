@@ -14,10 +14,11 @@ typedef struct url_parts {
   char* query_string;
 } url_parts;
 
+/// @brief free url parts
 void free_url_parts(url_parts* url);
 
 /// @brief safely append string to url
-/// @param url url to work on
+/// @param url url path to work on
 /// @param max_url_size maximum size of url string
 /// @param string_to_append
 void url_append(char* const url, int max_url_size, const char* const string_to_append);
