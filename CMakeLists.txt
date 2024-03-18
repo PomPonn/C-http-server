@@ -2,8 +2,14 @@ cmake_minimum_required(VERSION 3.8.0)
 
 project(C_HTTP_server VERSION 0.2.0 LANGUAGES C)
 
-add_executable(C_HTTP_server example/basic.c)
-#add_executable(C_HTTP_server example/min.c)
+# alter this variable to change example filename to compile
+set(EXAMPLE_FILE basic)
+
+string(CONCAT EXAMPLE_PATH example/ ${EXAMPLE_FILE} .c)
+string(TOUPPER ${EXAMPLE_FILE} EXAMPLE_FILE)
+
+add_compile_definitions(${EXAMPLE_FILE})
+add_executable(C_HTTP_server ${EXAMPLE_PATH})
 
 set(SRC_DIR ${CMAKE_HOME_DIRECTORY}/src)
 

@@ -1,3 +1,5 @@
+#if MIN
+
 #include "server/http_server.h"
 
 void on_request(http_request* req, http_response* res) {
@@ -25,3 +27,5 @@ int main() {
 
   return 0;
 }
+
+#endif

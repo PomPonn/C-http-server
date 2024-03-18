@@ -1,3 +1,5 @@
+#if BASIC
+
 #include "server/http_server.h"
 
 #include "misc/path.h"
@@ -124,7 +126,7 @@ int main() {
 
 #ifdef _DEBUG
 
-  error_set_callback(on_error);
+  error_set_callback((ERROR_CALLBACK)on_error);
   http_bind_listener(HTTP_EVENT_CONNECTION_OPEN, on_socket_open);
   http_bind_listener(HTTP_EVENT_CONNECTION_CLOSE, on_socket_close);
   http_bind_listener(HTTP_EVENT_SERVER_ON, on_server_on);
@@ -140,3 +142,5 @@ int main() {
 
   return 0;
 }
+
+#endif
