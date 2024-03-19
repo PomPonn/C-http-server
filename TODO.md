@@ -1,5 +1,4 @@
 ## TODO (descending priority):
-- update error message system
 - maybe add some other ways to write to the response to avoid bloaty response building and unnecessary response line processing
 - split 'utils' file into functional components
 - make tests
