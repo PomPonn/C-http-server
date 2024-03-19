@@ -110,9 +110,13 @@ void http_bind_listener(HTTP_EVENT event, void* callback)
 
 SOCKET http_create_server
 (const char* host, const char* port) {
+  #ifdef _WIN32
+
   if (!init_winsock()) {
     return INVALID_SOCKET;
   }
+  
+  #endif
 
   on_IO_request(IO_callback);
 

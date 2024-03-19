@@ -1,5 +1,7 @@
 #include "misc/url.h"
 
+#include "cp_defs/str.h"
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -18,10 +20,10 @@ void url_append(char* const url, int max_url_size, const char* const string_to_a
 
   // don't double slashes
   if (url[strlen(url) - 1] == '/' && string_to_append[0] == '/') {
-    strcat_s(url, max_url_size, string_to_append + 1);
+    STRCAT(url, max_url_size, string_to_append + 1);
   }
   else {
-    strcat_s(url, max_url_size, string_to_append);
+    STRCAT(url, max_url_size, string_to_append);
   }
 }
 
@@ -40,7 +42,7 @@ void url_parse(char* const url, url_parts* const parsed_url) {
 
   }
 
-  strncpy_s(parsed_url->protocol, _URL_PROT_SIZE, url, count);
+  STRNCPY(parsed_url->protocol, _URL_PROT_SIZE, url, count);
 
   // ...
 }

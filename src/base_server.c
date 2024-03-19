@@ -1,6 +1,7 @@
 #include "server/base_server.h"
 
 #include "misc/error.h"
+#include "misc/utils.h"
 #include "cp_defs/srv.h"
 
 // change if needed
@@ -235,7 +236,7 @@ SOCKET create_server_socket
   }
 
   // Bind the socket
-  retval = bind(server_socket, result->ai_addr, (int)result->ai_addrlen);
+  retval = bind(server_socket, result->ai_addr, result->ai_addrlen);
   if (retval == SOCKET_ERROR)
   {
     error_set_last_with_code(11, default_last_err);
