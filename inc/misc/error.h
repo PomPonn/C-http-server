@@ -6,6 +6,9 @@ typedef void (*ERROR_CALLBACK)(void);
 
 #define TEMP_SIZE 8
 
+#define error_last_print_message() \
+error_print_message(error_get_last_code())
+
 // required temp[TEMP_SIZE] buffer to use
 #define error_set_last_with_code(error_code, what_code) \
 _itoa_s(what_code, temp, TEMP_SIZE, 10); \
@@ -27,5 +30,5 @@ void error_set_last(int error_code, const char* what);
 /// @returns last occured error code
 int error_get_last_code();
 
-/// @brief prints last error message to the file set by error_set_output_file() (by default it's stderr)
-void error_last_print_message();
+/// @brief prints error code message to the file set by error_set_output_file() (by default it's stderr)
+void error_print_message(int err_code);
