@@ -8,17 +8,17 @@ typedef int CB_RESULT;
 #define CB_CLOSE_SOCKET 1
 
 // forward typedefs
+#ifdef _WIN32
 typedef unsigned int SOCKET;
+#elif __linux__
+typedef int SOCKET;
+#endif
 
 // callback types
 typedef CB_RESULT(*IO_CALLBACK)(SOCKET client_socket);
 typedef void(*SOCK_ACCEPT_CALLBACK)(SOCKET client_socket);
 typedef void(*SERVER_CLOSE_CALLBACK)(void);
 typedef void(*SERVER_OPEN_CALLBACK)(void);
-
-#define MemAlloc(flags, size) HeapAlloc(GetProcessHeap(), flags, size)
-#define MemFree(pmemory) HeapFree(GetProcessHeap(), 0, pmemory)
-
 
 /// @brief initialize WinSock library
 /// @return 1 on success, 0 on failure

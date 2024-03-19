@@ -3,8 +3,19 @@
 #include "misc/utils.h"
 #include "misc/error.h"
 #include "server/base_server.h"
+#include "misc/cross_defines.h"
+
+#ifdef _WIN32
 
 #include <WinSock2.h> // socket library
+
+#elif __linux__
+
+#include <unistd.h>
+#include <errno.h>
+#include <sys/socket.h>
+
+#endif
 
 // edit as needed
 #define CONNECTION_RECIEVE_BUFFER_SIZE 10240
@@ -33,10 +44,10 @@ CB_RESULT IO_callback(SOCKET client_socket) {
       _g_onconnclose(client_socket);
 
     if (shutdown(client_socket, SD_BOTH) == SOCKET_ERROR) {
-      error_set_last_with_code(16, WSAGetLastError());
+      error_set_last_with_code(16, default_last_err);
     }
-    if (closesocket(client_socket) == SOCKET_ERROR) {
-      error_set_last_with_code(17, WSAGetLastError());
+    if (socket_close(client_socket) == SOCKET_ERROR) {
+      error_set_last_with_code(17, default_last_err);
       return CB_CONTINUE;
     }
 
@@ -65,7 +76,7 @@ CB_RESULT IO_callback(SOCKET client_socket) {
 
     // send response
     if (send(client_socket, res, str_length(res), 0) == SOCKET_ERROR) {
-      error_set_last_with_code(8, WSAGetLastError());
+      error_set_last_with_code(8, default_last_err);
     }
 
     if (should_free)
@@ -105,7 +116,7 @@ SOCKET http_create_server
 
   on_IO_request(IO_callback);
 
-  return create_server_socket(host, port, SOCK_STREAM, IPPROTO_TCP);
+  return create_server_socket(host, port, SOCK_STREAM, IP_PROT_TCP);
 }
 
 int http_server_listen

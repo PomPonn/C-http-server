@@ -3,7 +3,18 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+
+#ifdef _WIN32
+
 #include <Windows.h>
+
+#elif __linux__
+
+#include <unistd.h>
+
+#endif
+
+int get_working_directory(char* buffer, int buffer_size);
 
 char* str_find_char(const char* str, const char c) {
   return strchr(str, c);
@@ -87,13 +98,6 @@ void free_content(char* content) {
   content = NULL;
 }
 
-int get_working_directory(char* buffer, int buffer_size) {
-  if (!GetCurrentDirectory(buffer_size, buffer)) {
-    return 0;
-  }
-  return 1;
-}
-
 void get_file_extension(const char* const filepath, char* const extension) {
   char* eptr = extension;
   char* pptr;
@@ -114,3 +118,23 @@ void get_file_extension(const char* const filepath, char* const extension) {
   }
   *eptr = '\0';
 }
+
+#ifdef _WIN32
+
+int get_working_directory(char* buffer, int buffer_size) {
+  if (!GetCurrentDirectory(buffer_size, buffer)) {
+    return 0;
+  }
+  return 1;
+}
+
+#elif __linux__
+
+int get_working_directory(char* buffer, int buffer_size) {
+  if (!getcwd(buffer_size, buffer)) {
+    return 0;
+  }
+  return 1;
+}
+
+#endif

@@ -10,6 +10,12 @@ string(TOUPPER ${EXAMPLE_FILE} EXAMPLE_FILE)
 
 add_compile_definitions(${EXAMPLE_FILE})
 add_executable(C_HTTP_server ${EXAMPLE_PATH})
+ 
+
+if(UNIX)
+    add_compile_options(-std=gnu17)
+endif()
+
 
 set(SRC_DIR ${CMAKE_HOME_DIRECTORY}/src)
 

@@ -14,7 +14,11 @@ typedef int HTTP_EVENT;
 
 // forward typedefs
 typedef int CB_RESULT;
+#ifdef _WIN32
 typedef unsigned int SOCKET;
+#elif __linux__
+typedef int SOCKET;
+#endif
 
 // http callbacks
 typedef void (*HTTP_REQUEST_CALLBACK)(http_request* req, http_response* res);
