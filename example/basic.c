@@ -99,6 +99,7 @@ void on_request(http_request* req, http_response* res) {
         (http_header[]) {
           { "Content-Type", mime_type },
           { "Content-Length", content_size_str },
+          { "Connection", "keep-alive" },
       });
     }
 
