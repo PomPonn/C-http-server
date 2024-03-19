@@ -6,8 +6,6 @@ typedef void (*ERROR_CALLBACK)(void);
 
 #define TEMP_SIZE 8
 
-void _itoa_s(int, char*, int, int);
-
 // required temp[TEMP_SIZE] buffer to use
 #define error_set_last_with_code(error_code, what_code) \
 _itoa_s(what_code, temp, TEMP_SIZE, 10); \

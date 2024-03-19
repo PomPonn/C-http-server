@@ -3,7 +3,7 @@
 #include "misc/utils.h"
 #include "misc/error.h"
 #include "server/base_server.h"
-#include "misc/cross_defines.h"
+#include "cp_defs/srv.h"
 
 #ifdef _WIN32
 

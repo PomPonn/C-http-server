@@ -6,7 +6,7 @@
 
 #define default_last_err WSAGetLastError()
 #define socket_close(socket) closesocket(socket)
-#define cleanup() cleanup()
+#define cleanup() WSACleanup()
 
 #elif __linux__
 
@@ -17,7 +17,7 @@
 
 #define socket_close(socket) close(socket)
 #define default_last_err errno
-#define cleanup() 
+#define cleanup()
 #define SD_BOTH SHUT_RDWR
 #define IP_PROT_TCP 6
 

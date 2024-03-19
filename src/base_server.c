@@ -1,7 +1,7 @@
 #include "server/base_server.h"
 
 #include "misc/error.h"
-#include "misc/cross_defines.h"
+#include "cp_defs/srv.h"
 
 // change if needed
 #define FD_SETSIZE 1024
@@ -23,7 +23,7 @@
 #include <netdb.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <sys/types.h> 
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/select.h>
 
@@ -206,7 +206,7 @@ SOCKET create_server_socket
   struct addrinfo hints, * result = NULL;
   // for error handling
   char temp[TEMP_SIZE];
-  
+
   // set hints struct
   #ifdef _WIN32
   ZeroMemory(&hints, sizeof(hints));
@@ -270,68 +270,6 @@ __err_cleanup:
 }
 
 #ifdef _WIN32
-
-SOCKET create_server_socket
-(const char* host, const char* port, int server_socket_type, int protocol) {
-
-  SOCKET server_socket = INVALID_SOCKET;
-  struct addrinfo hints, * result = NULL;
-  unsigned long io_mode = 1;
-  // for error handling
-  char temp[TEMP_SIZE];
-  
-  // set hints struct
-  ZeroMemory(&hints, sizeof(hints));
-  hints.ai_family = AF_UNSPEC;
-  hints.ai_protocol = protocol;
-  hints.ai_socktype = server_socket_type;
-  hints.ai_flags = AI_PASSIVE;
-
-  int retval = getaddrinfo(host, port, &hints, &result);
-
-  // verify whether getaddrinfo failed
-  if (retval || !result) {
-    error_set_last_with_code(5, default_last_err);
-    goto __err_cleanup;
-  }
-
-  // Create server socket
-  server_socket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
-  if (server_socket == INVALID_SOCKET)
-  {
-    error_set_last_with_code(6, default_last_err);
-    goto __err_cleanup;
-  }
-
-  // Bind the socket
-  retval = bind(server_socket, result->ai_addr, (int)result->ai_addrlen);
-  if (retval == SOCKET_ERROR)
-  {
-    error_set_last_with_code(11, default_last_err);
-    goto __err_cleanup;
-  }
-
-
-  // Make the socket non-blocking
-  retval = ioctlsocket(server_socket, FIONBIO, &io_mode);
-  if (retval == SOCKET_ERROR)
-  {
-    error_set_last_with_code(12, default_last_err);
-    goto __err_cleanup;
-  }
-
-  freeaddrinfo(result);
-
-  return server_socket;
-
-__err_cleanup:
-  if (result)
-    freeaddrinfo(result);
-  if (server_socket != INVALID_SOCKET)
-    socket_close(server_socket);
-  cleanup();
-  return INVALID_SOCKET;
-}
 
 BOOL init_winsock() {
   WSADATA wsa_data;
