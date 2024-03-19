@@ -39,7 +39,7 @@ void on_server_close(SERVER_CLOSE_CALLBACK callback);
 SOCKET create_server_socket
 (const char* host, const char* port, int server_socket_type, int protocol);
 
-/// @brief starts infinite loop which handles client connections
+/// @brief starts to handle client connections
 /// @param server_socket server socket to listen on
 /// @param max_connections mamimum number of simultaneous client connections
 /// @return 0 on success, nonzero on failure
