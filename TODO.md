@@ -4,7 +4,7 @@
 - split 'utils' file into functional components
 - make tests
 - build more base server implementations and let the user switch between them (multi-threaded - more performant, etc.)
-# WINDOWS:
+## WINDOWS:
 - none
-# LINUX:
+## LINUX:
 - fix select call (fill nfds argument)
