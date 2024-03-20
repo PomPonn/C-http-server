@@ -12,7 +12,12 @@
 #define DEFAULT_HOST "localhost"
 #define DEFAULT_PORT "80"
 
+#ifdef _WIN32
 #define ROOT_PATH "C:/Users/gangs/OneDrive/Dokumenty/MyStuff/Projects/C_HTTP_server/example/public"
+#else
+#define ROOT_PATH "/home/filip/Documents/projects/C_server/example/public"
+#endif
+
 
 pair_str_t mime_types[] = {
   { "html", "text/html; charset=utf-8" },

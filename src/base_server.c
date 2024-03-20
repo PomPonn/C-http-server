@@ -21,12 +21,10 @@
 #include <stdlib.h>
 #include <strings.h>
 #include <errno.h>
-#include <netdb.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/select.h>
+#include <signal.h>
+#include <netdb.h>
 
 #endif
 
@@ -44,7 +42,7 @@ SERVER_OPEN_CALLBACK g_serv_open_cb = NULL;
 #ifdef _WIN32
 BOOL WINAPI _control_handler(DWORD ctrl_type);
 #else
-void _at_exit();
+void _interrupt_handler(int signal_num);
 #endif
 
 int start_listening(SOCKET server_socket, int max_connections) {
@@ -65,16 +63,23 @@ int start_listening(SOCKET server_socket, int max_connections) {
 
   g_max_conns = max_connections;
   fd_set fd_read_set;
+  int nfds = 0;
   int ret_val = 0;
 
-  // set control handler to make cleanup after server shutdown
+  // set control/interrupt handler to make cleanup after server shutdown
   #ifdef _WIN32
   if (!SetConsoleCtrlHandler(_control_handler, TRUE)) {
     error_set_last_with_code(14, GetLastError());
     goto __err_cleanup;
   }
   #else
-  if (atexit(_at_exit)) {
+  struct sigaction signal_action;
+  
+  sigemptyset(&signal_action.sa_mask);
+  signal_action.sa_handler = _interrupt_handler;
+  signal_action.sa_flags = SA_RESTART;
+
+  if (sigaction(SIGINT, &signal_action, NULL)) {
     error_set_last_with_code(14, errno);
     goto __err_cleanup;
   }
@@ -102,14 +107,19 @@ int start_listening(SOCKET server_socket, int max_connections) {
     // set fd_read_set before every select call
     FD_ZERO(&fd_read_set);
     FD_SET(server_socket, &fd_read_set);
+    if (server_socket > nfds)
+          nfds = server_socket;
+
     for (int i = 1; i <= max_connections; i++) {
       if (g_connections[i] != INVALID_SOCKET) {
         FD_SET(g_connections[i], &fd_read_set);
+        if (g_connections[i] > nfds)
+          nfds = g_connections[i];
       }
     }
-
+    
     // wait until select return
-    ret_val = select(0, &fd_read_set, NULL, NULL, NULL);
+    ret_val = select(nfds + 1, &fd_read_set, NULL, NULL, NULL);
 
     if (g_quit)
       break;
@@ -326,9 +336,8 @@ BOOL WINAPI _control_handler(DWORD ctrl_type) {
 
 #ifndef _WIN32
 
-void _at_exit() {
+void _interrupt_handler(int signal_num) {
   g_quit = TRUE;
-  printf("at exit works\n"); // DELETE
   // wait until server idle
   while (g_processing) {}
 

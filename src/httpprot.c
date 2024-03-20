@@ -241,7 +241,6 @@ int resolve_http_request_line(char* const buffer, http_request* result) {
   char* ptr, * ptr2;
   int len = 0;
   char temp[SMALL_BUFLEN];
-
   // find next space
   if (!(ptr = strchr(buffer, ' '))) {
     return -1;
@@ -254,7 +253,7 @@ int resolve_http_request_line(char* const buffer, http_request* result) {
 
   // copy req method string to the temp buffer
   STRNCPY(temp, SMALL_BUFLEN, buffer, len);
-
+  printf("%s", temp); // error
   // set request method
   if (str_is_equal(temp, "GET")) {
     result->method = HTTP_GET;
@@ -303,7 +302,6 @@ int resolve_http_request_line(char* const buffer, http_request* result) {
   }
 
   char version_buffer[SMALL_BUFLEN];
-
   // copy version string
   char* vptr = ptr + 1;
   int c = 0;

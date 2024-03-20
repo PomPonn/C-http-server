@@ -57,16 +57,18 @@ CB_RESULT IO_callback(SOCKET client_socket) {
     http_request req;
     http_response res = NULL;
     int should_free = 1;
-
+    int t = 0;
+    printf("resloving...\n%s", buffer);
     // fill req struct
-    if (resolve_http_request_line(buffer, &req)) {
+    if (t = resolve_http_request_line(buffer, &req)) {
+      printf("%d\n", t);
       error_set_last(9, "IO_callback");
-      return CB_CONTINUE;
     }
-
-    // call on request callback
-    if (_g_onreq)
-      _g_onreq(&req, &res);
+    else {
+      // call on request callback
+      if (_g_onreq)
+        _g_onreq(&req, &res);
+    }
 
     // response not set, send internal server error response
     if (!res) {

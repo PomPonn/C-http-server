@@ -41,7 +41,7 @@ void error_last_print_message() {
   switch (g_last_error)
   {
   case 1:
-    fprintf(g_output_file, "Inavild arguments passed to the function: %s\n", g_what);
+    fprintf(g_output_file, "Invalid arguments passed to the function: %s\n", g_what);
     break;
   case 2:
     fprintf(g_output_file, "accept() call failed with code: %s\n", g_what);
