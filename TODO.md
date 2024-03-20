@@ -8,3 +8,4 @@
 - none
 ## LINUX:
 - fix select call (fill nfds argument)
+- use signal.h to free resources on shutdown
