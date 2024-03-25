@@ -10,7 +10,7 @@
 #define MAX_CONTENT_SIZE_STRLEN 64
 
 #define DEFAULT_HOST "localhost"
-#define DEFAULT_PORT "80"
+#define DEFAULT_PORT "8000"
 
 #ifdef _WIN32
 #define ROOT_PATH "C:/Users/gangs/OneDrive/Dokumenty/MyStuff/Projects/C_HTTP_server/example/public"

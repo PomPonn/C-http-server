@@ -57,11 +57,9 @@ CB_RESULT IO_callback(SOCKET client_socket) {
     http_request req;
     http_response res = NULL;
     int should_free = 1;
-    int t = 0;
-    printf("resloving...\n%s", buffer);
+
     // fill req struct
-    if (t = resolve_http_request_line(buffer, &req)) {
-      printf("%d\n", t);
+    if (resolve_http_request_line(buffer, &req)) {
       error_set_last(9, "IO_callback");
     }
     else {

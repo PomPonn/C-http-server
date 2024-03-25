@@ -253,7 +253,8 @@ int resolve_http_request_line(char* const buffer, http_request* result) {
 
   // copy req method string to the temp buffer
   STRNCPY(temp, SMALL_BUFLEN, buffer, len);
-  printf("%s", temp); // error
+  temp[len] = '\0';
+
   // set request method
   if (str_is_equal(temp, "GET")) {
     result->method = HTTP_GET;

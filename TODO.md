@@ -7,4 +7,4 @@
 ## WINDOWS:
 - none
 ## LINUX:
-- fix request method extraction
+- fix: sockets aren't closing after request finish
