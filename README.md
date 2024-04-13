@@ -1,4 +1,2 @@
-# C_server
-simple, single-threaded windows http server written in C
-## Remarks
-- to run server on linux, login as a user with root privileges
+# C_http_server
+Simple, single-threaded windows/linux http server written in C.
