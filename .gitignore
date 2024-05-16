@@ -54,5 +54,8 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-#CMake
+# CMake
 build/
+
+# Misc
+TODO.md
