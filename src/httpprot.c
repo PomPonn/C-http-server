@@ -1,6 +1,7 @@
 #include "server/httpprot.h"
 
 #include "misc/utils.h"
+#include "cp_defs/str.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -37,7 +38,7 @@ int http_is_value_in_header(const http_header* const header, char delim, char* v
       return 0;
     }
 
-    strncpy_s(temp, SMALL_BUFLEN, pstart, len);
+    STRNCPY(temp, SMALL_BUFLEN, pstart, len);
 
     // compare
     if (str_is_equal(temp, value)) {
@@ -79,7 +80,7 @@ int http_get_header
       break;
     }
 
-    strncpy_s(temp, SMALL_BUFLEN, line, len);
+    STRNCPY(temp, SMALL_BUFLEN, line, len);
 
     if (str_is_equal(temp, header_name)) {
       if (header_value) {
@@ -95,7 +96,7 @@ int http_get_header
         header_value = malloc(len + 1);
 
         // set header value
-        strncpy_s(header_value, len + 1, ptr, len);
+        STRNCPY(header_value, len + 1, ptr, len);
         header_value[len] = '\0';
       }
       return 1;
@@ -194,41 +195,41 @@ http_response http_build_response(
   *response = '\0';
 
   // concat http variant to response
-  strcat_s(response, resp_size, http_variant);
+  STRCAT(response, resp_size, http_variant);
 
   // construct version string
   char temp[8];
   if (version.minor == 0) {
-    sprintf_s(temp, sizeof(temp), "/%d ", version.major);
+    SPRINTF(temp, sizeof(temp), "/%d ", version.major);
   }
   else {
     // <major>.<minor>
-    sprintf_s(temp, sizeof(temp), "/%d.%d ", version.major, version.minor);
+    SPRINTF(temp, sizeof(temp), "/%d.%d ", version.major, version.minor);
   }
 
   // concat version string to response
-  strcat_s(response, resp_size, temp);
+  STRCAT(response, resp_size, temp);
 
   // concat status string to respone
-  strcat_s(response, resp_size, status);
+  STRCAT(response, resp_size, status);
   // end line
-  strcat_s(response, resp_size, CRLF);
+  STRCAT(response, resp_size, CRLF);
 
   for (int i = 0; i < h_count; i++) {
     // add header content
-    strcat_s(response, resp_size, headers[i].name);
-    strcat_s(response, resp_size, ": ");
-    strcat_s(response, resp_size, headers[i].value);
+    STRCAT(response, resp_size, headers[i].name);
+    STRCAT(response, resp_size, ": ");
+    STRCAT(response, resp_size, headers[i].value);
     // end line
-    strcat_s(response, resp_size, CRLF);
+    STRCAT(response, resp_size, CRLF);
   }
 
   // add empty line to indicate start of message body
-  strcat_s(response, resp_size, CRLF);
+  STRCAT(response, resp_size, CRLF);
 
   // add msg body
   if (body)
-    strcat_s(response, resp_size, body);
+    STRCAT(response, resp_size, body);
 
   if (response_size)
     *response_size = resp_size;
@@ -240,7 +241,6 @@ int resolve_http_request_line(char* const buffer, http_request* result) {
   char* ptr, * ptr2;
   int len = 0;
   char temp[SMALL_BUFLEN];
-
   // find next space
   if (!(ptr = strchr(buffer, ' '))) {
     return -1;
@@ -252,7 +252,8 @@ int resolve_http_request_line(char* const buffer, http_request* result) {
     return -2;
 
   // copy req method string to the temp buffer
-  strncpy_s(temp, SMALL_BUFLEN, buffer, len);
+  STRNCPY(temp, SMALL_BUFLEN, buffer, len);
+  temp[len] = '\0';
 
   // set request method
   if (str_is_equal(temp, "GET")) {
@@ -294,7 +295,7 @@ int resolve_http_request_line(char* const buffer, http_request* result) {
     return -3;
 
   // copy url string to the url_path container
-  strncpy_s(result->url_path, _PATHSIZE_, ptr, len);
+  STRNCPY(result->url_path, _PATHSIZE_, ptr, len);
 
   // find next slash
   if (!(ptr = strchr(++ptr2, '/'))) {
@@ -302,7 +303,6 @@ int resolve_http_request_line(char* const buffer, http_request* result) {
   }
 
   char version_buffer[SMALL_BUFLEN];
-
   // copy version string
   char* vptr = ptr + 1;
   int c = 0;

@@ -10,9 +10,14 @@
 #define MAX_CONTENT_SIZE_STRLEN 64
 
 #define DEFAULT_HOST "localhost"
-#define DEFAULT_PORT "80"
+#define DEFAULT_PORT "8000"
 
+#ifdef _WIN32
 #define ROOT_PATH "C:/Users/gangs/OneDrive/Dokumenty/MyStuff/Projects/C_HTTP_server/example/public"
+#else
+#define ROOT_PATH "/home/filip/Documents/projects/C_server/example/public"
+#endif
+
 
 pair_str_t mime_types[] = {
   { "html", "text/html; charset=utf-8" },
@@ -25,8 +30,6 @@ pair_str_t mime_types[] = {
   { "jpg", "image/jpeg" },
   { "jpeg", "image/jpeg" },
 };
-
-#ifdef _DEBUG
 
 void on_error() {
   error_last_print_message();
@@ -43,8 +46,6 @@ void on_server_on() {
 void on_server_off() {
   printf("\nserver stopped listening\n");
 }
-
-#endif
 
 int main();
 
@@ -125,15 +126,11 @@ void on_request(http_request* req, http_response* res) {
 
 int main() {
 
-#ifdef _DEBUG
-
   error_set_callback((ERROR_CALLBACK)on_error);
   http_bind_listener(HTTP_EVENT_CONNECTION_OPEN, on_socket_open);
   http_bind_listener(HTTP_EVENT_CONNECTION_CLOSE, on_socket_close);
   http_bind_listener(HTTP_EVENT_SERVER_ON, on_server_on);
   http_bind_listener(HTTP_EVENT_SERVER_OFF, on_server_off);
-
-#endif
 
   SOCKET server_socket = http_create_server(DEFAULT_HOST, DEFAULT_PORT);
 

@@ -61,12 +61,12 @@ CB_RESULT IO_callback(SOCKET client_socket) {
     // fill req struct
     if (resolve_http_request_line(buffer, &req)) {
       error_set_last(9, "IO_callback");
-      return CB_CONTINUE;
     }
-
-    // call on request callback
-    if (_g_onreq)
-      _g_onreq(&req, &res);
+    else {
+      // call on request callback
+      if (_g_onreq)
+        _g_onreq(&req, &res);
+    }
 
     // response not set, send internal server error response
     if (!res) {
@@ -110,9 +110,13 @@ void http_bind_listener(HTTP_EVENT event, void* callback)
 
 SOCKET http_create_server
 (const char* host, const char* port) {
+  #ifdef _WIN32
+
   if (!init_winsock()) {
     return INVALID_SOCKET;
   }
+  
+  #endif
 
   on_IO_request(IO_callback);
 

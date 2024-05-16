@@ -1,2 +1,2 @@
-# C_server
-simple, single-threaded windows http server written in C
+# C_http_server
+Simple, single-threaded windows/linux http server written in C.

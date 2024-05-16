@@ -8,7 +8,7 @@ typedef void (*ERROR_CALLBACK)(void);
 
 // required temp[TEMP_SIZE] buffer to use
 #define error_set_last_with_code(error_code, what_code) \
-_itoa_s(what_code, temp, TEMP_SIZE, 10); \
+int_to_string(what_code, temp, TEMP_SIZE); \
 error_set_last(error_code, temp); \
 
 /// @brief sets output file for error messages
