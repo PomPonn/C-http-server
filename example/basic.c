@@ -13,9 +13,9 @@
 #define DEFAULT_PORT "8000"
 
 #ifdef _WIN32
-#define ROOT_PATH "C:/Users/gangs/OneDrive/Dokumenty/MyStuff/Projects/C_HTTP_server/example/public"
+#define ROOT_PATH "..."
 #else
-#define ROOT_PATH "/home/filip/Documents/projects/C_server/example/public"
+#define ROOT_PATH "..."
 #endif
 
 
