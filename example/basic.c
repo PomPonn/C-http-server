@@ -12,11 +12,7 @@
 #define DEFAULT_HOST "localhost"
 #define DEFAULT_PORT "8000"
 
-#ifdef _WIN32
-#define ROOT_PATH "..."
-#else
-#define ROOT_PATH "..."
-#endif
+#define ROOT_PATH "../../example/public"
 
 
 pair_str_t mime_types[] = {
