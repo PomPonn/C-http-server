@@ -9,7 +9,7 @@ typedef int CB_RESULT;
 
 // forward typedefs
 #ifdef _WIN32
-typedef unsigned int SOCKET;
+typedef unsigned long long SOCKET;
 #elif __linux__
 typedef int SOCKET;
 #endif

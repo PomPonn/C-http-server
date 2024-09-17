@@ -15,7 +15,7 @@ typedef int HTTP_EVENT;
 // forward typedefs
 typedef int CB_RESULT;
 #ifdef _WIN32
-typedef unsigned int SOCKET;
+typedef unsigned long long SOCKET;
 #elif __linux__
 typedef int SOCKET;
 #endif
