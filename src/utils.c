@@ -1,6 +1,6 @@
 #include "misc/utils.h"
 
-#include "cp_defs/str.h"
+#include "cpdefs/strdef.h"
 
 #include <stdlib.h>
 #include <stdio.h>

@@ -2,7 +2,7 @@
 
 #include "misc/error.h"
 #include "misc/utils.h"
-#include "cp_defs/srv.h"
+#include "cpdefs/srvdef.h"
 
 // change if needed
 #define FD_SETSIZE 1024
@@ -25,6 +25,7 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <netdb.h>
+#include "base_server.h"
 
 #endif
 
@@ -74,7 +75,7 @@ int start_listening(SOCKET server_socket, int max_connections) {
   }
   #else
   struct sigaction signal_action;
-  
+
   sigemptyset(&signal_action.sa_mask);
   signal_action.sa_handler = _interrupt_handler;
   signal_action.sa_flags = SA_RESTART;
@@ -117,7 +118,7 @@ int start_listening(SOCKET server_socket, int max_connections) {
           nfds = g_connections[i];
       }
     }
-    
+
     // wait until select return
     ret_val = select(nfds + 1, &fd_read_set, NULL, NULL, NULL);
 
@@ -253,7 +254,6 @@ SOCKET create_server_socket
     goto __err_cleanup;
   }
 
-
   // Make the socket non-blocking
   #ifdef _WIN32
   u_long io_mode = 1;
@@ -272,13 +272,35 @@ SOCKET create_server_socket
   return server_socket;
 
 __err_cleanup:
+
   if (result)
     freeaddrinfo(result);
   if (server_socket != INVALID_SOCKET)
     socket_close(server_socket);
+
   cleanup();
   return INVALID_SOCKET;
 }
+
+void shutdown_server() {
+  g_quit = TRUE;
+
+  // wait until server idle
+  while (g_processing) {}
+
+  // free and close connections
+  for (int i = 0; i <= g_max_conns; i++) {
+    if (g_connections[i] != INVALID_SOCKET) {
+      socket_close(g_connections[i]);
+    }
+  }
+  free(g_connections);
+
+  // run on server shutdown callback
+  if (g_serv_close_cb)
+    g_serv_close_cb();
+}
+
 
 #ifdef _WIN32
 
@@ -303,26 +325,11 @@ BOOL WINAPI _control_handler(DWORD ctrl_type) {
   case CTRL_SHUTDOWN_EVENT:
   case CTRL_CLOSE_EVENT:
   {
-    g_quit = TRUE;
-
-    // wait until server idle
-    while (g_processing) {}
-
-    // free and close connections
-    for (int i = 0; i <= g_max_conns; i++) {
-      if (g_connections[i] != INVALID_SOCKET) {
-        socket_close(g_connections[i]);
-      }
-    }
-    free(g_connections);
-
-    // run on server shutdown callback
-    if (g_serv_close_cb)
-      g_serv_close_cb();
+    shutdown_server();
 
     cleanup();
 
-    ExitProcess(0);
+    exit(0);
     return TRUE;
   }
   default:
@@ -337,21 +344,9 @@ BOOL WINAPI _control_handler(DWORD ctrl_type) {
 #ifndef _WIN32
 
 void _interrupt_handler(int signal_num) {
-  g_quit = TRUE;
-  // wait until server idle
-  while (g_processing) {}
+  shutdown_server();
 
-  // free and close connections
-  for (int i = 0; i <= g_max_conns; i++) {
-    if (g_connections[i] != INVALID_SOCKET) {
-      socket_close(g_connections[i]);
-    }
-  }
-  free(g_connections);
-
-  // run on server shutdown callback
-  if (g_serv_close_cb)
-    g_serv_close_cb();
+  cleanup();
 }
 
 #endif

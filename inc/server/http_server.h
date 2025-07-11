@@ -40,6 +40,8 @@ void http_bind_listener(HTTP_EVENT event, void* callback);
 SOCKET http_create_server
 (const char* host, const char* port);
 
+void http_server_shutdown();
+
 /// @brief starts infinite loop which handles client connections
 /// @param server_socket socket to listen on
 /// @param max_connections maximum number of simultaneous connections

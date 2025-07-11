@@ -1,5 +1,7 @@
 #include "misc/error.h"
 
+#include <stdio.h>
+
 // global variables
 int g_last_error = 0;
 const char* g_what = NULL;

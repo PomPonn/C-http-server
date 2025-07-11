@@ -1,6 +1,6 @@
 #include "misc/url.h"
 
-#include "cp_defs/str.h"
+#include "cpdefs/strdef.h"
 
 #include <stdlib.h>
 #include <string.h>

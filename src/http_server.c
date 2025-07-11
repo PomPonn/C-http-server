@@ -3,7 +3,7 @@
 #include "misc/utils.h"
 #include "misc/error.h"
 #include "server/base_server.h"
-#include "cp_defs/srv.h"
+#include "cpdefs/srvdef.h"
 
 #ifdef _WIN32
 
@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <sys/socket.h>
+#include "http_server.h"
 
 #endif
 
@@ -115,12 +116,16 @@ SOCKET http_create_server
   if (!init_winsock()) {
     return INVALID_SOCKET;
   }
-  
+
   #endif
 
   on_IO_request(IO_callback);
 
   return create_server_socket(host, port, SOCK_STREAM, IP_PROT_TCP);
+}
+
+void http_server_shutdown() {
+  shutdown_server();
 }
 
 int http_server_listen
